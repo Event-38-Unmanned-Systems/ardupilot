@@ -425,6 +425,7 @@ private:
         uint32_t last_tkoff_arm_time;
         uint32_t last_check_ms;
         uint32_t last_report_ms;
+        bool has_heading = false;
         bool launchTimerStarted;
     } takeoff_state;
     
@@ -552,7 +553,11 @@ private:
         // length of time impact_detected has been true. Times out after a few seconds. Used to clip isFlyingProbability
         uint32_t impact_timer_ms;
     } crash_state;
-
+    
+    uint32_t is_Crashing_Timer;
+    int crashing_Multiple;
+    bool c2Sent = false;
+    bool timerSet = false;
     // true if we are in an auto-throttle mode, which means
     // we need to run the speed/height controller
     bool auto_throttle_mode:1;
@@ -1019,6 +1024,7 @@ private:
     bool allow_reverse_thrust(void);
     void update_aux();
     void update_is_flying_5Hz(void);
+    void is_crashing(void);
     void crash_detection_update(void);
     bool in_preLaunch_flight_stage(void);
     void handle_auto_mode(void);

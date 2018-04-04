@@ -113,6 +113,7 @@ void Plane::takeoff_calc_roll(void)
     if (baro_alt < auto_state.baro_takeoff_alt+lim1) {
         roll_limit = g.level_roll_limit;
     } else if (baro_alt < auto_state.baro_takeoff_alt+lim2) {
+        takeoff_state.has_heading = true;
         float proportion = (baro_alt - (auto_state.baro_takeoff_alt+lim1)) / (lim2 - lim1);
         roll_limit = (1-proportion) * g.level_roll_limit + proportion * roll_limit;
     }

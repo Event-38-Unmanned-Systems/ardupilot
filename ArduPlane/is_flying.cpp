@@ -151,13 +151,104 @@ void Plane::update_is_flying_5Hz(void)
     frsky_telemetry.set_is_flying(new_is_flying);
 #endif
     g2.stats.set_flying(new_is_flying);
-
+    
+    is_crashing();
     crash_detection_update();
 
     Log_Write_Status();
 
     // tell AHRS flying state
     ahrs.set_likely_flying(new_is_flying);
+}
+
+
+void Plane::is_crashing(void){
+
+if (is_flying()){
+    
+if (control_mode == AUTO || control_mode == RTL || control_mode == LOITER || control_mode == GUIDED || control_mode == CIRCLE){
+
+            switch (flight_stage)
+            {
+            case AP_Vehicle::FixedWing::FLIGHT_TAKEOFF:
+            if ( abs(nav_pitch_cd - ahrs.pitch_sensor) > 4500 && takeoff_state.has_heading){
+                
+                if (!timerSet){
+                      
+                      timerSet = true;
+                      is_Crashing_Timer = AP_HAL::millis();
+                      gcs().send_text(MAV_SEVERITY_INFO, "Code 1 %u", is_Crashing_Timer);
+                }
+                else {
+                    if (AP_HAL::millis() - is_Crashing_Timer > 3000 && !c2Sent){
+                        c2Sent = true;
+                        gcs().send_text(MAV_SEVERITY_INFO, "Code 2 %u", AP_HAL::millis());
+                    }
+                    else if(AP_HAL::millis() > is_Crashing_Timer + (0500 * crashing_Multiple) && !c2Sent) {
+                        crashing_Multiple++;
+                        gcs().send_text(MAV_SEVERITY_INFO, "Code 1 %u", is_Crashing_Timer);
+                    
+                    }
+                }        
+                    }
+                    else{
+                        //reset is_crashing timer
+                        c2Sent = false;
+                        crashing_Multiple = 1;
+                        timerSet = false;
+                    }
+                break;
+
+            case AP_Vehicle::FixedWing::FLIGHT_NORMAL:
+                if (in_preLaunch_flight_stage()) {
+                    
+                }
+                    
+              else if ( abs(nav_pitch_cd - ahrs.pitch_sensor) > 4500 && auto_state.takeoff_complete){
+                
+                if (!timerSet){
+                      
+                      timerSet = true;
+                      is_Crashing_Timer = AP_HAL::millis();
+                      gcs().send_text(MAV_SEVERITY_INFO, "Code 1 %u", is_Crashing_Timer);
+                }
+                else {
+                    if (AP_HAL::millis() - is_Crashing_Timer > 3000 && !c2Sent){
+                        gcs().send_text(MAV_SEVERITY_INFO, "Code 2 %u", AP_HAL::millis());
+                        c2Sent = true;
+                    }
+                    else if(AP_HAL::millis() > is_Crashing_Timer + (0500 * crashing_Multiple) && !c2Sent) {
+                        crashing_Multiple++;
+                      gcs().send_text(MAV_SEVERITY_INFO, "Code 1 %u", is_Crashing_Timer);
+                    
+                    }
+                }        
+                    }
+                    else{
+                        //reset is_crashing timer
+                        c2Sent = false;
+                        crashing_Multiple = 1;
+                        timerSet = false;
+                    }
+                break;
+
+            case AP_Vehicle::FixedWing::FLIGHT_VTOL:
+                break;
+
+            case AP_Vehicle::FixedWing::FLIGHT_LAND:
+                break;
+
+            case AP_Vehicle::FixedWing::FLIGHT_ABORT_LAND:
+                break;
+
+            default:
+                break;
+            } // switch
+
+    }
+}
+
+    
 }
 
 /*
@@ -266,7 +357,6 @@ void Plane::crash_detection_update(void)
     } else {
         crash_state.checkedHardLanding = false;
     }
-
     if (!crashed) {
         // reset timer
         crash_state.debounce_timer_ms = 0;
@@ -297,6 +387,7 @@ void Plane::crash_detection_update(void)
         }
     }
 }
+
 
 /*
  * return true if we are in a pre-launch phase of an auto-launch, typically used in bungee launches
