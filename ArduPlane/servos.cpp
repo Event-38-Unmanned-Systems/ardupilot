@@ -399,12 +399,15 @@ void Plane::set_servos_flaps(void)
     int8_t auto_flap_percent = 0;
     int8_t manual_flap_percent = 0;
 
+    
     // work out any manual flap input
+
     RC_Channel *flapin = RC_Channels::rc_channel(g.flapin_channel-1);
     if (flapin != nullptr && !failsafe.rc_failsafe && failsafe.throttle_counter == 0) {
         flapin->input();
         manual_flap_percent = flapin->percent_input();
     }
+
 
     if (auto_throttle_mode) {
         int16_t flapSpeedSource = 0;
@@ -448,9 +451,11 @@ void Plane::set_servos_flaps(void)
         }
     }
 
-    // manual flap input overrides auto flap input
-    if (abs(manual_flap_percent) > auto_flap_percent) {
+    // manual flap input overrides auto flap input 
+   if (!auto_throttle_mode){
+   if (abs(manual_flap_percent) > auto_flap_percent) {
         auto_flap_percent = manual_flap_percent;
+    }
     }
 
     SRV_Channels::set_output_scaled(SRV_Channel::k_flap_auto, auto_flap_percent);
