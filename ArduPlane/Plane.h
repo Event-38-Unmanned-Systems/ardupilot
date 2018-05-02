@@ -148,7 +148,6 @@ public:
     friend class AP_AdvancedFailsafe_Plane;
     friend class AP_Avoidance_Plane;
     friend class GCS_Plane;
-
     Plane(void);
 
     // HAL::Callbacks implementation.
@@ -477,7 +476,7 @@ private:
         // Altitude threshold to complete a takeoff command in autonomous
         // modes.  Centimeters above home
         int32_t takeoff_altitude_rel_cm;
-
+    
         // Minimum pitch to hold during takeoff command execution.  Hundredths of a degree
         int16_t takeoff_pitch_cd;
 
@@ -520,6 +519,7 @@ private:
 
         // are we doing loiter mode as a VTOL?
         bool vtol_loiter:1;
+        
     } auto_state;
 
     struct {
@@ -554,6 +554,19 @@ private:
         uint32_t impact_timer_ms;
     } crash_state;
     
+struct {
+    uint32_t time;
+    float percent;
+    
+} mav_set_flaps;
+int8_t auto_flap_percent = 0;
+struct{
+    uint32_t time;
+    bool islanding=false;
+    bool isTakeoff=false;
+    bool isPreTakeoff=false;
+    bool isNormalFlight=false;
+}auto_set_flaps;
     uint32_t is_Crashing_Timer;
     int crashing_Multiple;
     bool c2Sent = false;
@@ -561,7 +574,6 @@ private:
     // true if we are in an auto-throttle mode, which means
     // we need to run the speed/height controller
     bool auto_throttle_mode:1;
-
     // true if we are in an auto-navigation mode, which controls whether control input is ignored
     // with STICK_MIXING=0
     bool auto_navigation_mode:1;
@@ -1075,6 +1087,7 @@ private:
     void do_digicam_configure(const AP_Mission::Mission_Command& cmd);
     void do_digicam_control(const AP_Mission::Mission_Command& cmd);
     bool start_command_callback(const AP_Mission::Mission_Command &cmd);
+    void do_set_flaps(const AP_Mission::Mission_Command& cmd);
     bool verify_command_callback(const AP_Mission::Mission_Command& cmd);
     void notify_flight_mode(enum FlightMode mode);
     void log_init();

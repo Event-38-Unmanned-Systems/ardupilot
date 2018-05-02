@@ -899,7 +899,6 @@ void GCS_MAVLINK_Plane::handleMessage(mavlink_message_t* msg)
         handle_request_data_stream(msg, true);
         break;
     }
-
     case MAVLINK_MSG_ID_COMMAND_INT:
     {
         // decode
@@ -1281,7 +1280,13 @@ void GCS_MAVLINK_Plane::handleMessage(mavlink_message_t* msg)
                 }
             }
             break;
-
+            case MAV_CMD_DO_SET_FLAPS:
+            {
+                plane.mav_set_flaps.percent = packet.param1;
+                plane.mav_set_flaps.time = millis();
+                gcs().send_text(MAV_SEVERITY_DEBUG, "flaps manual control set to %f", packet.param1);
+            }
+            break;
         case MAV_CMD_DO_FENCE_ENABLE:
             result = MAV_RESULT_ACCEPTED;
             
@@ -1616,7 +1621,6 @@ void GCS_MAVLINK_Plane::handleMessage(mavlink_message_t* msg)
         plane.camera_mount.configure_msg(msg);
         break;
     }
-
     //deprecated. Use MAV_CMD_DO_MOUNT_CONTROL
     case MAVLINK_MSG_ID_MOUNT_CONTROL:
     {

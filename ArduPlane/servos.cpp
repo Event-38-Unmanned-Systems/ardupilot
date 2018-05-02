@@ -396,7 +396,6 @@ void Plane::set_servos_controlled(void)
 void Plane::set_servos_flaps(void)
 {
     // Auto flap deployment
-    int8_t auto_flap_percent = 0;
     int8_t manual_flap_percent = 0;
 
     
@@ -410,6 +409,7 @@ void Plane::set_servos_flaps(void)
 
 
     if (auto_throttle_mode) {
+        
         int16_t flapSpeedSource = 0;
         if (ahrs.airspeed_sensor_enabled()) {
             flapSpeedSource = target_airspeed_cm * 0.01f;
@@ -422,40 +422,72 @@ void Plane::set_servos_flaps(void)
             auto_flap_percent = g.flap_1_percent;
         } //else flaps stay at default zero deflection
 
-        if (flight_stage == AP_Vehicle::FixedWing::FLIGHT_LAND && landing.get_flap_percent() != 0) {
+        if (flight_stage == AP_Vehicle::FixedWing::FLIGHT_LAND && landing.get_flap_percent() != 0 && !plane.auto_set_flaps.islanding) {
+            plane.auto_set_flaps.islanding = true;
+            plane.auto_set_flaps.isTakeoff = false;
+            plane.auto_set_flaps.isNormalFlight = false;
+            plane.auto_set_flaps.isPreTakeoff = false;
+            plane.auto_set_flaps.time = millis();
             auto_flap_percent = landing.get_flap_percent();
         }
 
+        if (plane.mav_set_flaps.time > plane.auto_set_flaps.time){            
+            auto_flap_percent = plane.mav_set_flaps.percent;
+        }
         /*
           special flap levels for takeoff and landing. This works
           better than speed based flaps as it leads to less
           possibility of oscillation
          */
-        if (control_mode == AUTO) {
+
             switch (flight_stage) {
             case AP_Vehicle::FixedWing::FLIGHT_TAKEOFF:
             case AP_Vehicle::FixedWing::FLIGHT_ABORT_LAND:
-                if (g.takeoff_flap_percent != 0) {
-                    auto_flap_percent = g.takeoff_flap_percent;
+                if (g.takeoff_flap_percent != 0 && !plane.auto_set_flaps.isTakeoff) {
+                plane.auto_set_flaps.islanding = false;
+                plane.auto_set_flaps.isPreTakeoff = false;
+                plane.auto_set_flaps.isNormalFlight = false;
+                plane.auto_set_flaps.isTakeoff = true;
+                plane.auto_set_flaps.time = millis();
+                auto_flap_percent = g.takeoff_flap_percent;
                 }
                 break;
-            case AP_Vehicle::FixedWing::FLIGHT_NORMAL:
-                if (g.takeoff_flap_percent != 0 && in_preLaunch_flight_stage()) {
+                case AP_Vehicle::FixedWing::FLIGHT_NORMAL:
+                if (g.takeoff_flap_percent != 0 && in_preLaunch_flight_stage() && !plane.auto_set_flaps.isPreTakeoff) {                    
                     // TODO: move this to a new FLIGHT_PRE_TAKEOFF stage
+                    plane.auto_set_flaps.islanding = false;
+                    plane.auto_set_flaps.isPreTakeoff = true;
+                    plane.auto_set_flaps.isTakeoff = false;
+                    plane.auto_set_flaps.isNormalFlight = false;
+                    plane.auto_set_flaps.time = millis();
                     auto_flap_percent = g.takeoff_flap_percent;
+                }
+                else if (!plane.auto_set_flaps.isNormalFlight && !in_preLaunch_flight_stage()) {                    
+                    // TODO: move this to a new FLIGHT_PRE_TAKEOFF stage
+                    plane.auto_set_flaps.islanding = false;
+                    plane.auto_set_flaps.isPreTakeoff = false;
+                    plane.auto_set_flaps.isTakeoff = false;
+                    plane.auto_set_flaps.isNormalFlight = true;                    
+                    plane.auto_set_flaps.time = millis();
+                    auto_flap_percent = 0;
                 }
                 break;
             default:
                 break;
             }
-        }
+        
     }
 
     // manual flap input overrides auto flap input 
    if (!auto_throttle_mode){
-   if (abs(manual_flap_percent) > auto_flap_percent) {
+
+   plane.auto_set_flaps.islanding = false;
+   plane.auto_set_flaps.isPreTakeoff = false;
+   plane.auto_set_flaps.isTakeoff = false;
+   plane.auto_set_flaps.isNormalFlight = false; 
+   plane.auto_set_flaps.time = millis();    
+                
         auto_flap_percent = manual_flap_percent;
-    }
     }
 
     SRV_Channels::set_output_scaled(SRV_Channel::k_flap_auto, auto_flap_percent);
@@ -469,7 +501,6 @@ void Plane::set_servos_flaps(void)
     // output to flaperons, if any
     flaperon_update(auto_flap_percent);
 }
-
 
 /*
   apply vtail and elevon mixers
