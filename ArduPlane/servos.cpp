@@ -407,6 +407,10 @@ void Plane::set_servos_flaps(void)
         manual_flap_percent = flapin->percent_input();
     }
 
+        if(plane.auto_set_flaps.last_mode != control_mode){
+        plane.auto_set_flaps.modeSwitchTime = millis();
+        auto_flap_percent = 0;
+    }
 
     if (auto_throttle_mode) {
         
@@ -431,7 +435,7 @@ void Plane::set_servos_flaps(void)
             auto_flap_percent = landing.get_flap_percent();
         }
 
-        if (plane.mav_set_flaps.time > plane.auto_set_flaps.time){            
+        if (plane.mav_set_flaps.time > plane.auto_set_flaps.time && plane.mav_set_flaps.time > plane.auto_set_flaps.modeSwitchTime){            
             auto_flap_percent = plane.mav_set_flaps.percent;
         }
         /*
@@ -477,6 +481,7 @@ void Plane::set_servos_flaps(void)
             }
         
     }
+    
 
     // manual flap input overrides auto flap input 
    if (!auto_throttle_mode){
@@ -490,6 +495,8 @@ void Plane::set_servos_flaps(void)
         auto_flap_percent = manual_flap_percent;
     }
 
+    plane.auto_set_flaps.last_mode = control_mode;
+    
     SRV_Channels::set_output_scaled(SRV_Channel::k_flap_auto, auto_flap_percent);
     SRV_Channels::set_output_scaled(SRV_Channel::k_flap, manual_flap_percent);
 

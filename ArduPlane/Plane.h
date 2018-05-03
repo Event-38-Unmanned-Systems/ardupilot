@@ -561,11 +561,15 @@ struct {
 } mav_set_flaps;
 int8_t auto_flap_percent = 0;
 struct{
+    
     uint32_t time;
+    uint32_t modeSwitchTime;
     bool islanding=false;
     bool isTakeoff=false;
     bool isPreTakeoff=false;
     bool isNormalFlight=false;
+    enum FlightMode last_mode;
+    
 }auto_set_flaps;
     uint32_t is_Crashing_Timer;
     int crashing_Multiple;
