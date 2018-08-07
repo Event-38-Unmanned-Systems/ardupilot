@@ -18,7 +18,8 @@ void Plane::set_control_channels(void)
     channel_pitch    = RC_Channels::rc_channel(rcmap.pitch()-1);
     channel_throttle = RC_Channels::rc_channel(rcmap.throttle()-1);
     channel_rudder   = RC_Channels::rc_channel(rcmap.yaw()-1);
-
+    channel_failsafe = RC_Channels::rc_channel((g.failsafe_ch)-1);
+    
     // set rc channel ranges
     channel_roll->set_angle(SERVO_MAX);
     channel_pitch->set_angle(SERVO_MAX);
@@ -363,8 +364,8 @@ bool Plane::rc_failsafe_active(void)
         // we haven't had a valid RC frame for 1 seconds
         return true;
     }
-    if (channel_throttle->get_reverse()) {
-        return channel_throttle->get_radio_in() >= g.throttle_fs_value;
+    if (channel_failsafe->get_reverse()) {
+        return channel_failsafe->get_radio_in() >= g.throttle_fs_value;
     }
-    return channel_throttle->get_radio_in() <= g.throttle_fs_value;
+    return channel_failsafe->get_radio_in() <= g.throttle_fs_value;
 }

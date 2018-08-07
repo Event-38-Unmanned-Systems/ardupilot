@@ -730,6 +730,11 @@ const AP_Param::Info Plane::var_info[] = {
     // @Increment: 1
     // @User: Advanced
     GSCALAR(mount_close_alt,   "MOUNT_CLOSE_ALT",        0),    
+    // @Param: FAILSAFE_CH
+    // @DisplayName: Num Resets
+    // @Description: Number of APM board resets
+    // @User: Advanced
+    GSCALAR(failsafe_ch,   "FAILSAFE_CH",        4),    
     // @Param: SYS_NUM_RESETS
     // @DisplayName: Num Resets
     // @Description: Number of APM board resets

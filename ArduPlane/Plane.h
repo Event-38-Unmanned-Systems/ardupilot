@@ -184,7 +184,8 @@ private:
     RC_Channel *channel_pitch;
     RC_Channel *channel_throttle;
     RC_Channel *channel_rudder;
-
+    RC_Channel *channel_failsafe;
+    
     // notification object for LEDs, buzzers etc (parameter set to false disables external leds)
     AP_Notify notify = AP_Notify::create();
 
