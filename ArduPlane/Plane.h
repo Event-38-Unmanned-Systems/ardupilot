@@ -364,7 +364,7 @@ private:
 
     // true if we have a position estimate from AHRS
     bool have_position;
-
+    bool hatch_closed = false;
     // Airspeed
     // The calculated airspeed to use in FBW-B.  Also used in higher modes for insuring min ground speed is met.
     // Also used for flap deployment criteria.  Centimeters per second.

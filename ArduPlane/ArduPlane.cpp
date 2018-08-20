@@ -216,14 +216,16 @@ void Plane::update_mount(void)
 #endif
 
 	//under mount_close_alt close
-	if (relative_altitude <= g.mount_close_alt){
+	if (relative_altitude <= g.mount_close_alt && hatch_closed == false){
         
 	SRV_Channels::set_output_pwm_max(SRV_Channel::k_unused1);
-	
+	hatch_closed = true;
+    
     }
-    if(relative_altitude > g.mount_open_alt){
+    
+    if(relative_altitude > g.mount_open_alt && hatch_closed == true){
         SRV_Channels::set_output_pwm_min(SRV_Channel::k_unused1);
-		
+		hatch_closed = false;        
 	} 
     
 }
