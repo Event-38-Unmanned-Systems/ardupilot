@@ -570,6 +570,12 @@ private:
     int8_t  throttle_watt_limit_min; // for reverse thrust
     uint32_t throttle_watt_limit_timer_ms;
 
+    struct {
+    int8_t doArm = 0;
+    bool checkCanArm = false;
+} block_arm;
+
+
     AP_Vehicle::FixedWing::FlightStage flight_stage = AP_Vehicle::FixedWing::FLIGHT_NORMAL;
 
     // probability of aircraft is currently in flight. range from 0 to

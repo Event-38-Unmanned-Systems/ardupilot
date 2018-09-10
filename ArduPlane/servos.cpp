@@ -522,6 +522,26 @@ void Plane::servos_twin_engine_mix(void)
 */
 void Plane::set_servos(void)
 {
+
+
+    if ((hal.util->safety_switch_state() == AP_HAL::Util::SAFETY_DISARMED)){        
+        
+        block_arm.checkCanArm = true;
+        
+    }
+    
+    if (block_arm.checkCanArm && (hal.util->safety_switch_state() == AP_HAL::Util::SAFETY_ARMED)){
+        
+            block_arm.doArm = 0;
+            
+        if (channel_throttle->returnpwm() < g.PREVENT_ESC_CAL){
+            block_arm.doArm = 1;
+            block_arm.checkCanArm = false;
+        }
+        
+    }
+    
+  
     // start with output corked. the cork is released when we run
     // servos_output(), which is run from all code paths in this
     // function
@@ -587,6 +607,7 @@ void Plane::set_servos(void)
          *  control is automatic */
         throttle_slew_limit();
     }
+   
 
     if (!arming.is_armed()) {
         //Some ESCs get noisy (beep error msgs) if PWM == 0.
@@ -657,6 +678,7 @@ void Plane::set_servos(void)
  */
 void Plane::servos_output(void)
 {
+    if(block_arm.doArm == 1){
     hal.rcout->cork();
 
     // support twin-engine aircraft
@@ -664,7 +686,7 @@ void Plane::servos_output(void)
 
     // cope with tailsitters
     quadplane.tailsitter_output();
-    
+
     // the mixers need pwm to be calculated now
     SRV_Channels::calc_pwm();
     
@@ -684,6 +706,17 @@ void Plane::servos_output(void)
 
     if (g2.servo_channels.auto_trim_enabled()) {
         servos_auto_trim();
+    }
+    }
+    else {
+    
+    SRV_Channels::set_output_pwm(SRV_Channel::k_throttle, 1100);
+    hal.rcout->cork();
+    SRV_Channels::calc_pwm();
+
+    SRV_Channels::output_ch_all();
+    
+    hal.rcout->push();
     }
 }
 

@@ -37,7 +37,7 @@ void Plane::set_control_channels(void)
 
     if (!arming.is_armed() && arming.arming_required() == AP_Arming::YES_MIN_PWM) {
         SRV_Channels::set_safety_limit(SRV_Channel::k_throttle, aparm.throttle_min<0?SRV_Channel::SRV_CHANNEL_LIMIT_TRIM:SRV_Channel::SRV_CHANNEL_LIMIT_MIN);
-    }
+    }  
 
     // setup correct scaling for ESCs like the UAVCAN PX4ESC which
     // take a proportion of speed
@@ -206,7 +206,10 @@ void Plane::read_radio()
     }
 
     control_failsafe();
-
+    
+    
+    if (block_arm.doArm == 1){
+        
     SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, channel_throttle->get_control_in());
 
     if (g.throttle_nudge && SRV_Channels::get_output_scaled(SRV_Channel::k_throttle) > 50 && geofence_stickmixing()) {
@@ -220,7 +223,11 @@ void Plane::read_radio()
         airspeed_nudge_cm = 0;
         throttle_nudge = 0;
     }
-
+    }
+    else{
+        
+        SRV_Channels::set_output_scaled(SRV_Channel::k_throttle, SRV_Channel::SRV_CHANNEL_LIMIT_TRIM);        
+    }
     rudder_arm_disarm_check();
 
     if (g.rudder_only != 0) {

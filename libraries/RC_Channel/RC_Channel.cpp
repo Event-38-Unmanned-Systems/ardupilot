@@ -196,7 +196,11 @@ RC_Channel::pwm_to_angle_dz_trim(uint16_t _dead_zone, uint16_t _trim)
         return 0;
     }
 }
-
+int16_t
+RC_Channel::returnpwm()
+{
+    return radio_in;
+}
 /*
   return an "angle in centidegrees" (normally -4500 to 4500) from
   the current radio_in value using the specified dead_zone

@@ -54,7 +54,7 @@ public:
         k_param_landing,
         k_param_NavEKF3,
         k_param_BoardConfig_CAN,
-
+        k_param_PREVENT_ESC_CAL,
         // Misc
         //
         k_param_auto_trim      = 10,
@@ -474,7 +474,8 @@ public:
 #if HIL_SUPPORT
     AP_Int8  hil_mode;
 #endif
-
+    
+    AP_Int16 PREVENT_ESC_CAL;
     AP_Int8 compass_enabled;
     AP_Int8 flap_1_percent;
     AP_Int8 flap_1_speed;

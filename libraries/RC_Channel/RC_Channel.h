@@ -1,4 +1,5 @@
 /// @file	RC_Channel.h
+/// @file	RC_Channel.h
 /// @brief	RC_Channel manager, with EEPROM-backed storage of constants.
 #pragma once
 
@@ -48,7 +49,7 @@ public:
     // calculate an angle given dead_zone and trim. This is used by the quadplane code
     // for hover throttle
     int16_t     pwm_to_angle_dz_trim(uint16_t dead_zone, uint16_t trim);
-
+    int16_t     returnpwm();
     /*
       return a normalised input for a channel, in range -1 to 1,
       centered around the channel trim. Ignore deadzone.
