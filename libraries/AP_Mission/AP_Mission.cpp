@@ -1770,6 +1770,43 @@ uint16_t AP_Mission::num_commands_max(void) const
     return (_storage.size() - 4) / AP_MISSION_EEPROM_COMMAND_SIZE;
 }
 
+
+//find out if the current waypoint is within a landing sequence.
+bool AP_Mission::search_approach_path(int wpNO){
+	//set to negative number to never allow true at start
+	int landing_start_index = -1;
+	int landing_index = -1;
+
+    for (uint16_t i = 1; i < num_commands(); i++) {
+        Mission_Command tmp;
+        if (!read_cmd_from_storage(i, tmp)) {
+            continue;
+        }
+
+        if (tmp.id == MAV_CMD_DO_LAND_START) {
+                landing_start_index = i;
+            }
+
+	else if (tmp.id == MAV_CMD_NAV_LAND || tmp.id  == MAV_CMD_NAV_VTOL_LAND){
+		landing_index = i;
+	}
+
+	if (wpNO >= landing_start_index && wpNO <= landing_index){
+	return true;
+	}
+
+	if (landing_start_index != -1 && landing_index != -1){
+		landing_start_index = -1;
+		landing_index = -1;
+	}
+
+	}
+
+	return false;
+
+}
+
+
 // find the nearest landing sequence starting point (DO_LAND_START) and
 // return its index.  Returns 0 if no appropriate DO_LAND_START point can
 // be found.

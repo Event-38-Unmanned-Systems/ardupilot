@@ -24,7 +24,7 @@ bool Plane::start_command(const AP_Mission::Mission_Command& cmd)
 
         // start non-idle
         auto_state.idle_mode = false;
-        
+
         nav_controller->set_data_is_stale();
 
         // reset loiter start time. New command is a new loiter
@@ -32,8 +32,16 @@ bool Plane::start_command(const AP_Mission::Mission_Command& cmd)
 
         AP_Mission::Mission_Command next_nav_cmd;
         const uint16_t next_index = mission.get_current_nav_index() + 1;
+	//if a mission contains do_land_start and our current waypoint is between do_land_start and a land/vtol_land waypoint we assume we're on a landing approach
+	if (mission.get_landing_sequence_start() != 0){
+
+		auto_state.wp_is_land_approach = mission.search_approach_path(mission.get_current_nav_index());
+	}
+
+	else{
         auto_state.wp_is_land_approach = mission.get_next_nav_cmd(next_index, next_nav_cmd) && (next_nav_cmd.id == MAV_CMD_NAV_LAND) &&
             !quadplane.is_vtol_land(next_nav_cmd.id);
+	}
     }
 
     switch(cmd.id) {
