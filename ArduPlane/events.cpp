@@ -107,6 +107,15 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
         break;
         
     case Mode::Number::AUTO:
+	if (quadplane.in_vtol_auto()){
+	    if (quadplane.options & QuadPlane::OPTION_FS_QRTL) {
+            set_mode(mode_qrtl, reason);
+            } else {
+            set_mode(mode_qland, reason);
+        }
+        break;
+	}
+	else FALLTHROUGH;
     case Mode::Number::AVOID_ADSB:
     case Mode::Number::GUIDED:
     case Mode::Number::LOITER:
@@ -154,6 +163,14 @@ void Plane::failsafe_long_off_event(ModeReason reason)
 
 void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
 {
+
+	if (quadplane.in_vtol_mode() && !plane.auto_state.wp_is_land_approach && (Failsafe_Action)action != Failsafe_Action_None){
+            if (quadplane.available()) {
+                plane.set_mode(mode_qland, ModeReason::BATTERY_FAILSAFE);
+            }
+	}
+
+else{
     switch ((Failsafe_Action)action) {
         case Failsafe_Action_QLand:
             if (quadplane.available()) {
@@ -163,8 +180,13 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
             FALLTHROUGH;
         case Failsafe_Action_Land:
             if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND && control_mode != &mode_qland) {
-                // never stop a landing if we were already committed
-                if (plane.mission.jump_to_landing_sequence()) {
+                // never stop a landing if we were already committed --get mode still code is placeholder
+		if(plane.auto_state.wp_is_land_approach && plane.control_mode->mode_number() == Mode::Number::AUTO ){
+		break;
+		}
+
+                else if (plane.mission.jump_to_landing_sequence()) {
+
                     plane.set_mode(mode_auto, ModeReason::BATTERY_FAILSAFE);
                     break;
                 }
@@ -199,4 +221,6 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
             // and ensure all appropriate flags are going off to the user
             break;
     }
+
+}
 }
