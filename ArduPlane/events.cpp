@@ -107,7 +107,11 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
         break;
         
     case Mode::Number::AUTO:
-	if (quadplane.in_vtol_auto()){
+	
+	if (plane.auto_state.wp_is_land_approach){
+		break;
+	}
+	else if (quadplane.in_vtol_auto()){
 	    if (quadplane.options & QuadPlane::OPTION_FS_QRTL) {
             set_mode(mode_qrtl, reason);
             } else {
