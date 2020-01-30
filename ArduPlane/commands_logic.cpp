@@ -336,6 +336,35 @@ void Plane::do_RTL(int32_t rtl_altitude)
     logger.Write_Mode(control_mode->mode_number(), control_mode_reason);
 }
 
+void Plane::do_force_home(int32_t rtl_altitude){
+				//get reference to home
+				const struct Location &home_loc = AP::ahrs().get_home();				
+				//create copy of home
+				Location returnloc = {};				
+				returnloc = home_loc;
+				//update altitude of copy
+				returnloc.alt = rtl_altitude;
+				returnloc.relative_alt= false;
+				//update previous and current waypoint locations
+				prev_WP_loc = current_loc;
+				next_WP_loc = returnloc;
+				//factor in terrain if applicable
+				setup_terrain_target_alt(next_WP_loc);
+				set_target_altitude_location(next_WP_loc);
+
+				 if (aparm.loiter_radius < 0) {
+					loiter.direction = -1;
+				} else {
+					loiter.direction = 1;
+				}
+
+    setup_glide_slope();
+    setup_turn_angle();
+
+    logger.Write_Mode(control_mode->mode_number(), control_mode_reason);
+
+}
+
 /*
   start a NAV_TAKEOFF command
  */

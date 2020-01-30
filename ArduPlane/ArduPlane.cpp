@@ -453,20 +453,9 @@ void Plane::update_navigation()
         }
         break;
             
-    case Mode::Number::RTL:
-        if (quadplane.available() && quadplane.rtl_mode == 1 &&
-            (nav_controller->reached_loiter_target() ||
-             current_loc.past_interval_finish_line(prev_WP_loc, next_WP_loc) ||
-             auto_state.wp_distance < MAX(qrtl_radius, quadplane.stopping_distance())) &&
-            AP_HAL::millis() - last_mode_change_ms > 1000) {
-            /*
-              for a quadplane in RTL mode we switch to QRTL when we
-              are within the maximum of the stopping distance and the
-              RTL_RADIUS
-             */
-            set_mode(mode_qrtl, ModeReason::UNKNOWN);
-            break;
-        } else if (g.rtl_autoland == 1 &&
+		case Mode::Number::RTL:					
+		if (waitUpdate == false){
+		if (g.rtl_autoland == 1 &&
             !auto_state.checked_for_autoland &&
             reached_loiter_target() && 
             labs(altitude_error_cm) < 1000) {
@@ -492,17 +481,57 @@ void Plane::update_navigation()
             // on every loop
             auto_state.checked_for_autoland = true;
         }
+		
+		else if (g.rtl_autoland == 3 &&
+            !auto_state.checked_for_autoland &&
+            reached_loiter_target() && 
+            labs(altitude_error_cm) < 1000) {
+				
+            // Go directly to the landing sequence
+			auto_state.checked_for_autoland = true;	
+            if (mission.jump_to_landing_sequence()) {
+                // switch from RTL -> AUTO
+                set_mode(mode_auto, ModeReason::UNKNOWN);
+				FORCED_HOME = false;
+			}
+			else if(ahrs.home_is_set()) {
+				
+				plane.do_force_home(plane.get_RTL_altitude());
+				FORCED_HOME = true;				
+			}
+		}
+		
+		else if (quadplane.available()  && quadplane.rtl_mode == 1 && ( auto_state.checked_for_autoland == true || g.rtl_autoland == 0 ) &&
+            (nav_controller->reached_loiter_target() ||
+             current_loc.past_interval_finish_line(prev_WP_loc, next_WP_loc) ||
+             auto_state.wp_distance < MAX(qrtl_radius, quadplane.stopping_distance())) &&
+            AP_HAL::millis() - last_mode_change_ms > 1000 ) {
+            /*
+              for a quadplane in RTL mode we switch to QRTL when we
+              are within the maximum of the stopping distance and the
+              RTL_RADIUS
+             */
+            set_mode(mode_qrtl, ModeReason::UNKNOWN);
+            break;
+        }		
+		
+	}
+		
+		waitUpdate = false;
+		
         radius = abs(g.rtl_radius);
         if (radius > 0) {
             loiter.direction = (g.rtl_radius < 0) ? -1 : 1;
         }
         // fall through to LOITER
-        FALLTHROUGH;
-
+        update_loiter(radius);
+		break;
+		
     case Mode::Number::LOITER:
     case Mode::Number::AVOID_ADSB:
     case Mode::Number::GUIDED:
     case Mode::Number::TAKEOFF:
+	    waitUpdate = true;
         update_loiter(radius);
         break;
 

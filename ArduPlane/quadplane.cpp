@@ -2526,8 +2526,14 @@ void QuadPlane::control_qrtl(void)
  */
 void QuadPlane::init_qrtl(void)
 {
-    // use do_RTL() to setup next_WP_loc
+    // use do_RTL() to setup next_WP_loc only if we have not been forced to a home point instead of a ralley point
+if (!plane.FORCED_HOME){
     plane.do_RTL(plane.home.alt + qrtl_alt*100UL);
+}
+else{
+	plane.do_force_home(plane.home.alt + qrtl_alt*100UL);
+	plane.FORCED_HOME = false;
+}
     plane.prev_WP_loc = plane.current_loc;
     poscontrol.slow_descent = (plane.current_loc.alt > plane.next_WP_loc.alt);
     poscontrol.state = QPOS_POSITION1;

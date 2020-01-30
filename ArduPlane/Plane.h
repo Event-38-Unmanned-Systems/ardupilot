@@ -225,6 +225,8 @@ private:
         int16_t rudder;   // value for rudder
     } steering_control;
 
+bool FORCED_HOME = false;
+
     // should throttle be pass-thru in guided?
     bool guided_throttle_passthru;
 
@@ -355,7 +357,7 @@ private:
     bool any_failsafe_triggered() {
         return failsafe.state != FAILSAFE_NONE || battery.has_failsafed() || failsafe.adsb;
     }
-
+    bool waitUpdate = false;
     // A counter used to count down valid gps fixes to allow the gps estimate to settle
     // before recording our home position (and executing a ground start if we booted with an air start)
     uint8_t ground_start_count = 5;
@@ -823,6 +825,7 @@ private:
     // set home location and store it persistently:
     bool set_home_persistently(const Location &loc) WARN_IF_UNUSED;
     void do_RTL(int32_t alt);
+	void do_force_home(int32_t alt);
     bool verify_takeoff();
     bool verify_loiter_unlim(const AP_Mission::Mission_Command &cmd);
     bool verify_loiter_time();
