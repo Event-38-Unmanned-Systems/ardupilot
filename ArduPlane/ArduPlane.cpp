@@ -485,11 +485,12 @@ void Plane::update_navigation()
 		else if (g.rtl_autoland == 3 &&
             !auto_state.checked_for_autoland &&
             reached_loiter_target() && 
-            labs(altitude_error_cm) < 1000) {
-				
+            labs(altitude_error_cm) < 1000 && loiter.start_time_ms + (g.rtl_fs_time * 1000) < AP_HAL::millis() ) {
+					
             // Go directly to the landing sequence
 			auto_state.checked_for_autoland = true;	
-            if (mission.jump_to_landing_sequence()) {
+
+             if (mission.jump_to_landing_sequence()) {
                 // switch from RTL -> AUTO
                 set_mode(mode_auto, ModeReason::UNKNOWN);
 				FORCED_HOME = false;

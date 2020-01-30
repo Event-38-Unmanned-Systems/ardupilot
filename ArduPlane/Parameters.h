@@ -145,7 +145,7 @@ public:
         k_param_parachute_channel,
         k_param_crash_accel_threshold,
         k_param_override_safety,
-        k_param_land_throttle_slewrate, // 104 unused - moved to AP_Landing
+        k_param_rtl_fs_time, // 104 unused - moved to AP_Landing
 
         // 105: Extra parameters
         k_param_fence_retalt = 105,
@@ -474,6 +474,7 @@ public:
     AP_Int8 takeoff_throttle_delay;
     AP_Int8 takeoff_tdrag_elevator;
     AP_Float takeoff_tdrag_speed1;
+	AP_Float rtl_fs_time;
     AP_Float takeoff_rotate_speed;
     AP_Int8 takeoff_throttle_slewrate;
     AP_Float takeoff_pitch_limit_reduction_sec;
