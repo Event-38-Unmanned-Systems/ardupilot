@@ -395,6 +395,13 @@ const AP_Param::Info Plane::var_info[] = {
     // @Units: m
     // @User: Standard
     GSCALAR(terrain_lookahead, "TERRAIN_LOOKAHD",  2000),
+	 // @Param: TERRAIN_MIN_FOLLOW
+    // @DisplayName: Terrain min follow
+    // @Description: This controls the lowest altitude an aicraft can be above ground in any mode that allows terrain following. Only applicable when terrain_follow = 2
+    // @Range: 0 500
+    // @Units: m
+    // @User: Standard
+    GSCALAR(terrain_min_follow, "TERRAIN_MIN_FOLL",  5),
 #endif
 
     // @Param: FBWB_CLIMB_RATE
@@ -1310,8 +1317,6 @@ const AP_Param::ConversionInfo conversion_table[] = {
     { Parameters::k_param_land_disarm_delay,  0,      AP_PARAM_INT8,  "LAND_DISARMDELAY" },
     { Parameters::k_param_land_then_servos_neutral,0, AP_PARAM_INT8,  "LAND_THEN_NEUTRAL" },
     { Parameters::k_param_land_abort_throttle_enable,0,AP_PARAM_INT8, "LAND_ABORT_THR" },
-    { Parameters::k_param_land_flap_percent,  0,      AP_PARAM_INT8,  "LAND_FLAP_PERCENT" },
-
     // battery failsafes
     { Parameters::k_param_fs_batt_voltage,    0,      AP_PARAM_FLOAT, "BATT_LOW_VOLT" },
     { Parameters::k_param_fs_batt_mah,        0,      AP_PARAM_FLOAT, "BATT_LOW_MAH" },

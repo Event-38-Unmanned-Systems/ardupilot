@@ -233,7 +233,8 @@ int32_t Plane::relative_target_altitude_cm(void)
 {
 #if AP_TERRAIN_AVAILABLE
     float relative_home_height;
-    if (target_altitude.terrain_following && 
+	float terrain_diff;
+    if ( g.terrain_follow==1 && target_altitude.terrain_following && 
         terrain.height_relative_home_equivalent(target_altitude.terrain_alt_cm*0.01f,
                                                 relative_home_height, true)) {
         // add lookahead adjustment the target altitude
@@ -247,7 +248,35 @@ int32_t Plane::relative_target_altitude_cm(void)
         // current location. Use it.
         return relative_home_height*100;
     }
+	    else if (g.terrain_follow ==2 && target_altitude.terrain_following && 
+        terrain.height_relative_home_equivalent(g.terrain_min_follow,
+                                                relative_home_height, true) ) {
+													
+													
+		 terrain.height_above_terrain(terrain_diff, true) ;		 
+
+		int32_t relative_alt = target_altitude.amsl_cm - home.alt;
+		relative_alt += mission_alt_offset()*100;
+		relative_alt += rangefinder_correction() * 100;
+	    
+		// add lookahead adjustment the target altitude
+        target_altitude.lookahead = lookahead_adjustment();
+        relative_home_height += target_altitude.lookahead;
+
+        // correct for rangefinder data
+        relative_home_height += rangefinder_correction();
+
+		if (relative_alt  >   (relative_home_height*100) + 300){
+			
+			return relative_alt;
+			
+		}
+		else{return relative_home_height*100;}
+		
+	}
 #endif
+		   
+    gcs().send_text(MAV_SEVERITY_INFO, "not following because rel wp selected");
     int32_t relative_alt = target_altitude.amsl_cm - home.alt;
     relative_alt += mission_alt_offset()*100;
     relative_alt += rangefinder_correction() * 100;

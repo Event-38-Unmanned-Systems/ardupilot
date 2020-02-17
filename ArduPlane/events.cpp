@@ -119,7 +119,7 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
         }
         break;
 	}
-	else FALLTHROUGH;
+	else {FALLTHROUGH;}
     case Mode::Number::AVOID_ADSB:
     case Mode::Number::GUIDED:
     case Mode::Number::LOITER:

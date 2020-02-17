@@ -121,7 +121,7 @@ public:
         k_param_terrain_lookahead,
         k_param_fbwa_tdrag_chan,
         k_param_rangefinder_landing,
-        k_param_land_flap_percent,  // unused - moved to AP_Landing
+        k_param_terrain_min_follow,  // unused - moved to AP_Landing
         k_param_takeoff_flap_percent,
         k_param_flap_slewrate,
         k_param_rtl_autoland,
@@ -482,6 +482,7 @@ public:
 #if AP_TERRAIN_AVAILABLE
     AP_Int8 terrain_follow;
     AP_Int16 terrain_lookahead;
+	AP_Int8 terrain_min_follow;
 #endif
     AP_Int16 glide_slope_min;
     AP_Float glide_slope_threshold;
