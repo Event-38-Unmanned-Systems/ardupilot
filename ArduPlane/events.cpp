@@ -168,7 +168,7 @@ void Plane::failsafe_long_off_event(ModeReason reason)
 void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
 {
 
-	if (quadplane.in_vtol_mode() && !plane.auto_state.wp_is_land_approach && (Failsafe_Action)action != Failsafe_Action_None){
+	if (quadplane.in_vtol_mode() && (Failsafe_Action)action != Failsafe_Action_None){
             if (quadplane.available()) {
                 plane.set_mode(mode_qland, ModeReason::BATTERY_FAILSAFE);
             }
@@ -184,7 +184,9 @@ else{
             FALLTHROUGH;
         case Failsafe_Action_Land:
             if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND && control_mode != &mode_qland) {
-                // never stop a landing if we were already committed --get mode still code is placeholder
+                
+				// never stop a landing if we were already in auto and committed 
+				
 		if(plane.auto_state.wp_is_land_approach && plane.control_mode->mode_number() == Mode::Number::AUTO ){
 		break;
 		}
@@ -197,7 +199,7 @@ else{
             }
             FALLTHROUGH;
         case Failsafe_Action_RTL:
-            if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND && control_mode != &mode_qland && !quadplane.in_vtol_land_sequence()) {
+            if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND && control_mode != &mode_qland && !quadplane.in_vtol_land_sequence() && !(plane.auto_state.wp_is_land_approach && plane.control_mode->mode_number() == Mode::Number::AUTO)) {
                 // never stop a landing if we were already committed
                 set_mode(mode_rtl, ModeReason::BATTERY_FAILSAFE);
                 aparm.throttle_cruise.load();
