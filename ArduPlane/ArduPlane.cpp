@@ -69,7 +69,7 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
     SCHED_TASK(rpm_update,             10,    100),
     SCHED_TASK(airspeed_ratio_update,   1,    100),
 #if MOUNT == ENABLED
-    SCHED_TASK_CLASS(AP_Mount, &plane.camera_mount, update, 50, 100),
+    SCHED_TASK_CLASS(AP_Mount, &plane.camera_mount, update, 50, 75),
 #endif // MOUNT == ENABLED
 #if CAMERA == ENABLED
     SCHED_TASK_CLASS(AP_Camera, &plane.camera, update_trigger, 50, 100),

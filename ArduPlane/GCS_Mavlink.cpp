@@ -664,6 +664,25 @@ bool GCS_MAVLINK_Plane::handle_guided_request(AP_Mission::Mission_Command &cmd)
     return true;
 }
 
+MAV_RESULT GCS_MAVLINK_Plane::handle_command_do_set_roi(const Location &roi_loc)
+{
+	gcs().send_text(MAV_SEVERITY_INFO,"roi_cmd");
+	 plane.camera_mount.set_roi_target(roi_loc);
+    return MAV_RESULT_ACCEPTED;
+}
+
+MAV_RESULT GCS_MAVLINK_Plane::handle_command_mount(const mavlink_command_long_t &packet)
+{
+
+    return GCS_MAVLINK::handle_command_mount(packet);
+
+}
+
+void GCS_MAVLINK_Plane::handle_mount_message(const mavlink_message_t &msg)
+{
+    GCS_MAVLINK::handle_mount_message(msg);
+}
+
 /*
   handle a request to change current WP altitude. This happens via a
   callback from handle_mission_item()
