@@ -26,6 +26,11 @@ void AP_Mount_Backend::set_roi_target(const struct Location &target_loc)
     _frontend.set_mode(_instance, MAV_MOUNT_MODE_GPS_POINT);
 }
 
+void AP_Mount_Backend::get_roi_target()
+{
+		calc_loc_from_angle();
+}
+
 // set_sys_target - sets system that mount should attempt to point towards
 void AP_Mount_Backend::set_target_sysid(uint8_t sysid)
 {
@@ -152,6 +157,8 @@ bool AP_Mount_Backend::calc_angle_to_roi_target(Vector3f& angles_to_target_rad,
     return calc_angle_to_location(_state._roi_target, angles_to_target_rad, calc_tilt, calc_pan, relative_pan);
 }
 
+
+
 bool AP_Mount_Backend::calc_angle_to_sysid_target(Vector3f& angles_to_target_rad,
                                                   bool calc_tilt,
                                                   bool calc_pan,
@@ -168,6 +175,64 @@ bool AP_Mount_Backend::calc_angle_to_sysid_target(Vector3f& angles_to_target_rad
                                   calc_tilt,
                                   calc_pan,
                                   relative_pan);
+}
+
+// calc loc_from_angle - calculates a coordinate in line from current gimbal angles assuming equal ground height at target location 
+bool AP_Mount_Backend::calc_loc_from_angle(){
+
+	//translate yaw back into absolute heading
+	float panAbs = wrap_PI(_angle_ef_target_rad.z + AP::ahrs().yaw);
+	
+    //get the angle opposite to the gimbal orientation in reference to a 90
+	float opptiltRad = 1.5708 - _angle_ef_target_rad.y;
+	
+	if (_angle_ef_target_rad.y < 0){
+		return false;
+	}
+	
+     Location current_loc;
+	 Location dest_loc;
+    if (!AP::ahrs().get_position(current_loc)) {
+        return false;
+    }
+	
+	int32_t current_alt_cm = 0;
+    if (!current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, current_alt_cm)) {
+        return false;
+    }	
+	
+	
+	float dist;
+	//allow setting a roi under us by constraining between slightly inside 0 and 90 degrees 
+    constrain_float(opptiltRad, .001 , 1.5707);
+	
+	//distance from current point to point in gimbal view in m
+	dist = current_alt_cm * sinf(opptiltRad) * 100;		
+	
+	//distance to point divided by the radius of the earth in meters 
+	float distratio = ((dist) / 6378000);
+	float distratiosin = sinf(distratio);
+	float distratiocos = cosf(distratio);
+	float sinlat = sinf(ToRad(current_loc.lat));
+	float coslat = cosf(ToRad(current_loc.lat));	
+	
+	//leave lat in radians for now
+	dest_loc.lat = asinf( sinlat * distratiocos + coslat *  distratiosin * cosf(panAbs));
+	
+	dest_loc.lng = ToDeg( ToRad(current_loc.lng) + atan2f(distratiocos -  sinlat * sinf(dest_loc.lat), sinf(panAbs) *distratiosin *coslat));
+		
+	dest_loc.lat = ToDeg(dest_loc.lat);
+	dest_loc.alt = current_alt_cm * 100;
+	
+    // set the target gps location
+    _state._roi_target = dest_loc;
+    _state._roi_target_set = true;
+
+    // set the mode to GPS tracking mode
+    _frontend.set_mode(_instance, MAV_MOUNT_MODE_GPS_POINT);
+
+return true;	
+	
 }
 
 // calc_angle_to_location - calculates the earth-frame roll, tilt and pan angles (and radians) to point at the given target

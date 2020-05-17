@@ -56,7 +56,10 @@ public:
 
     // set_roi_target - sets target location that mount should attempt to point towards
     void set_roi_target(const struct Location &target_loc);
-
+	
+    // gets_roi_target - gets and sets target location that mount should attempt to point towards	
+    void get_roi_target();
+	
     // set_sys_target - sets system that mount should attempt to point towards
     void set_target_sysid(uint8_t sysid);
 
@@ -96,6 +99,8 @@ protected:
                                 bool calc_tilt,
                                 bool calc_pan,
                                 bool relative_pan = true) const WARN_IF_UNUSED;
+								
+bool calc_loc_from_angle();
 
     // calc_angle_to_roi_target - calculates the earth-frame roll, tilt
     // and pan angles (and radians) to point at the ROI-target (as set

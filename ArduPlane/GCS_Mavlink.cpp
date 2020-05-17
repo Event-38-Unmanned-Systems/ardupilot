@@ -666,10 +666,24 @@ bool GCS_MAVLINK_Plane::handle_guided_request(AP_Mission::Mission_Command &cmd)
 
 MAV_RESULT GCS_MAVLINK_Plane::handle_command_do_set_roi(const Location &roi_loc)
 {
+	
+	if (plane.g.stick_mixing ==1 ){
 	gcs().send_text(MAV_SEVERITY_INFO,"roi_cmd");
 	 plane.camera_mount.set_roi_target(roi_loc);
+	}
+
+	if (plane.g.stick_mixing ==2 ){
+	gcs().send_text(MAV_SEVERITY_INFO,"roi_from_ang");
+	
+	 plane.camera_mount.set_roi_target(roi_loc);
+	}
+
     return MAV_RESULT_ACCEPTED;
+
+	
 }
+
+
 
 MAV_RESULT GCS_MAVLINK_Plane::handle_command_mount(const mavlink_command_long_t &packet)
 {
