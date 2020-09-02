@@ -1,6 +1,6 @@
 #include "AP_Mount_Backend.h"
 #include <AP_AHRS/AP_AHRS.h>
-
+#include <GCS_MAVLink/GCS.h>
 extern const AP_HAL::HAL& hal;
 
 // set_angle_targets - sets angle targets in degrees
@@ -180,18 +180,17 @@ bool AP_Mount_Backend::calc_angle_to_sysid_target(Vector3f& angles_to_target_rad
 // calc loc_from_angle - calculates a coordinate in line from current gimbal angles assuming equal ground height at target location 
 bool AP_Mount_Backend::calc_loc_from_angle(){
 
-	//translate yaw back into absolute heading
-	float panAbs = wrap_PI(_angle_ef_target_rad.z + AP::ahrs().yaw);
+
+	double panAbs = wrap_PI(_angle_ef_target_rad.z + AP::ahrs().yaw);
 	
     //get the angle opposite to the gimbal orientation in reference to a 90
-	float opptiltRad = 1.5708 - _angle_ef_target_rad.y;
-	
-	if (_angle_ef_target_rad.y < 0){
-		return false;
-	}
-	
+	double opptiltRad = abs(_angle_ef_target_rad.y);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "pan in radians! %f", panAbs);
+    gcs().send_text(MAV_SEVERITY_CRITICAL, "tilt in radians! %f", opptiltRad);
+    constrain_float(opptiltRad, .001 , 1.5707);
+        
      Location current_loc;
-	 Location dest_loc;
+
     if (!AP::ahrs().get_position(current_loc)) {
         return false;
     }
@@ -200,35 +199,27 @@ bool AP_Mount_Backend::calc_loc_from_angle(){
     if (!current_loc.get_alt_cm(Location::AltFrame::ABOVE_HOME, current_alt_cm)) {
         return false;
     }	
+
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "current lat! %ld", current_loc.lat);
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "current lng %ld", current_loc.lng);
 	
+	double dist;
 	
-	float dist;
-	//allow setting a roi under us by constraining between slightly inside 0 and 90 degrees 
-    constrain_float(opptiltRad, .001 , 1.5707);
-	
-	//distance from current point to point in gimbal view in m
-	dist = current_alt_cm * sinf(opptiltRad) * 100;		
-	
-	//distance to point divided by the radius of the earth in meters 
-	float distratio = ((dist) / 6378000);
-	float distratiosin = sinf(distratio);
-	float distratiocos = cosf(distratio);
-	float sinlat = sinf(ToRad(current_loc.lat));
-	float coslat = cosf(ToRad(current_loc.lat));	
-	
-	//leave lat in radians for now
-	dest_loc.lat = asinf( sinlat * distratiocos + coslat *  distratiosin * cosf(panAbs));
-	
-	dest_loc.lng = ToDeg( ToRad(current_loc.lng) + atan2f(distratiocos -  sinlat * sinf(dest_loc.lat), sinf(panAbs) *distratiosin *coslat));
-		
-	dest_loc.lat = ToDeg(dest_loc.lat);
-	dest_loc.alt = current_alt_cm * 100;
-	
+	//distance from current point to point in gimbal view in cm
+	dist = (current_alt_cm/100) / tanf(opptiltRad);		
+	gcs().send_text(MAV_SEVERITY_CRITICAL, "dist meters! %.15f", dist);
+
+	current_loc.offset_bearing(ToDeg(panAbs),dist);
+
+	current_loc.alt = 0;
+
     // set the target gps location
-    _state._roi_target = dest_loc;
+    _state._roi_target = current_loc;
     _state._roi_target_set = true;
 
     // set the mode to GPS tracking mode
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "target lat! %ld", current_loc.lat);
+    //gcs().send_text(MAV_SEVERITY_CRITICAL, "target lng %ld", current_loc.lng);
     _frontend.set_mode(_instance, MAV_MOUNT_MODE_GPS_POINT);
 
 return true;	
@@ -254,7 +245,6 @@ bool AP_Mount_Backend::calc_angle_to_location(const struct Location &target, Vec
     }
     float GPS_vector_z = target_alt_cm - current_alt_cm;
     float target_distance = 100.0f*norm(GPS_vector_x, GPS_vector_y);      // Careful , centimeters here locally. Baro/alt is in cm, lat/lon is in meters.
-
     // initialise all angles to zero
     angles_to_target_rad.zero();
 
