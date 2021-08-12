@@ -232,7 +232,7 @@ public:
         //
         // 140: Sensor parameters
         //
-        k_param_imu = 140, // deprecated - can be deleted
+        k_param_sysid_sw_type = 140, // deprecated - can be deleted
         k_param_battery_monitoring = 141,   // deprecated - can be deleted
         k_param_volt_div_ratio, // deprecated - can be deleted
         k_param_curr_amp_per_volt,  // deprecated - can be deleted
@@ -383,6 +383,7 @@ public:
     //
     AP_Int16        sysid_this_mav;
     AP_Int16        sysid_my_gcs;
+	AP_Int16        sysid_sw_type;
     AP_Int8         telem_delay;
 
     AP_Float        throttle_filt;

@@ -57,6 +57,12 @@ const AP_Param::Info Copter::var_info[] = {
     // @User: Advanced
     GSCALAR(sysid_my_gcs,   "SYSID_MYGCS",     255),
 
+	// @Param: SYSID_SW_TYPE
+    // @DisplayName: Used to tell which uav type is connected
+    // @Description: E38 Custom model parameter
+    // @User: Advanced
+    GSCALAR(sysid_sw_type,   "SYSID_SW_TYPE",     1),
+
     // @Param: PILOT_THR_FILT
     // @DisplayName: Throttle filter cutoff
     // @Description: Throttle filter cutoff (Hz) - active whenever altitude control is inactive - 0 to disable
