@@ -325,7 +325,7 @@ public:
         k_param_L1_controller,
         k_param_rcmap,
         k_param_TECS_controller,
-        k_param_rally_total_old,  //unused
+        k_param_sysid_sw_type,  //unused
         k_param_steerController,
 
         //
@@ -353,6 +353,7 @@ public:
 
     // Telemetry control
     //
+	AP_Int16 sysid_sw_type;
     AP_Int16 sysid_this_mav;
     AP_Int16 sysid_my_gcs;
     AP_Int8 telem_delay;
