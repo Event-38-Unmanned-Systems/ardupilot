@@ -36,6 +36,12 @@ const AP_Param::Info Plane::var_info[] = {
     // @Path: ../libraries/AP_SerialManager/AP_SerialManager.cpp
     GOBJECT(serial_manager, "SERIAL",   AP_SerialManager),
 
+	// @Param: SYSID_SW_TYPE
+    // @DisplayName: Used to tell which uav type is connected
+    // @Description: E38 Custom model parameter
+    // @User: Advanced
+    GSCALAR(sysid_sw_type,   "SYSID_SW_TYPE",     1),
+	
     // @Param: AUTOTUNE_LEVEL
     // @DisplayName: Autotune level
     // @Description: Level of aggressiveness of pitch and roll PID gains. Lower values result in a 'softer' tune. Level 6 recommended for most planes.
@@ -1299,7 +1305,6 @@ ParametersG2::ParametersG2(void) :
 const AP_Param::ConversionInfo conversion_table[] = {
     { Parameters::k_param_log_bitmask_old,    0,      AP_PARAM_INT16, "LOG_BITMASK" },
     { Parameters::k_param_rally_limit_km_old, 0,      AP_PARAM_FLOAT, "RALLY_LIMIT_KM" },
-    { Parameters::k_param_rally_total_old,    0,      AP_PARAM_INT8, "RALLY_TOTAL" },
     { Parameters::k_param_serial0_baud,       0,      AP_PARAM_INT16, "SERIAL0_BAUD" },
     { Parameters::k_param_serial1_baud,       0,      AP_PARAM_INT16, "SERIAL1_BAUD" },
     { Parameters::k_param_serial2_baud,       0,      AP_PARAM_INT16, "SERIAL2_BAUD" },
