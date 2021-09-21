@@ -474,7 +474,7 @@ case Mode::Number::RTL:
 		else if (g.rtl_autoland == 3 &&
             !auto_state.checked_for_autoland &&
             reached_loiter_target() && 
-            labs(altitude_error_cm) < 1000) {
+            labs(altitude_error_cm) < 1000 && loiter.start_time_ms + (g.rtl_fs_time * 1000) < AP_HAL::millis() ) {
 				
             // Go directly to the landing sequence
 			auto_state.checked_for_autoland = true;	
