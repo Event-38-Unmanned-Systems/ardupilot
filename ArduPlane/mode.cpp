@@ -48,6 +48,8 @@ bool Mode::enter()
 
     // new mode means new loiter
     plane.loiter.start_time_ms = 0;
+	plane.loiter.reached_target_alt = false;
+    plane.loiter.sum_cd = 0;
 
     // record time of mode change
     plane.last_mode_change_ms = AP_HAL::millis();

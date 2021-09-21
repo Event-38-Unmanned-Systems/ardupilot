@@ -752,7 +752,7 @@ bool Plane::verify_loiter_to_alt(const AP_Mission::Mission_Command &cmd)
     // condition_value == 0 means alt has never been reached
     if (condition_value == 0) {
         // primary goal, loiter to alt
-        if (labs(loiter.sum_cd) > 1 && (loiter.reached_target_alt || loiter.unable_to_acheive_target_alt)) {
+        if (labs(loiter.sum_cd) > 1 && (loiter.reached_target_alt || loiter.unable_to_acheive_target_alt) && reached_loiter_target()) {
             // primary goal completed, initialize secondary heading goal
             if (loiter.unable_to_acheive_target_alt) {
                 gcs().send_text(MAV_SEVERITY_INFO,"Loiter to alt was stuck at %d", int(current_loc.alt/100));
@@ -761,7 +761,7 @@ bool Plane::verify_loiter_to_alt(const AP_Mission::Mission_Command &cmd)
             condition_value = 1;
             result = verify_loiter_heading(true);
         }
-    } else {
+    } else if (labs(loiter.sum_cd) > 1 && reached_loiter_target()){
         // secondary goal, loiter to heading
         result = verify_loiter_heading(false);
     }
