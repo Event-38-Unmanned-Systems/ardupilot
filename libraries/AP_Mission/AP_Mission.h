@@ -471,7 +471,11 @@ public:
 
     // jumps the mission to the closest landing abort that is planned, returns false if unable to find a valid abort
     bool jump_to_abort_landing_sequence(void);
-
+	
+	//accepts a waypoint number checks if that number is inside an 
+	//approach path (between DO_LAND_START and VTOL_LAND or LAND) returns true if inside otherwise false
+	bool search_approach_path(int);
+	 
     // force mission to resume when start_or_resume() is called
     void set_force_resume(bool force_resume) { _force_resume = force_resume; }
 
