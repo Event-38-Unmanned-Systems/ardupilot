@@ -107,6 +107,10 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
         break;
         
     case Mode::Number::AUTO:
+	if (plane.auto_state.wp_is_land_approach){
+		break;
+	}
+	else FALLTHROUGH;
     case Mode::Number::AVOID_ADSB:
     case Mode::Number::GUIDED:
     case Mode::Number::LOITER:
@@ -152,9 +156,26 @@ void Plane::failsafe_long_off_event(ModeReason reason)
     failsafe.state = FAILSAFE_NONE;
 }
 
-void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
+//
+bool Plane::canFailsafe()
 {
-    switch ((Failsafe_Action)action) {
+	
+	if (plane.auto_state.wp_is_land_approach && control_mode == &mode_auto){
+		return false;
+	}
+	if (control_mode == &mode_qland){
+		return false;
+	}
+	if (quadplane.in_vtol_land_sequence()){
+		return false;
+	}
+	
+		return true;	
+}
+
+//enacts failsafe option passed in through ACTION
+void Plane:: handle_failsafe_switch(const char *type_str,const int8_t action){
+ switch ((Failsafe_Action)action) {
         case Failsafe_Action_QLand:
             if (quadplane.available()) {
                 plane.set_mode(mode_qland, ModeReason::BATTERY_FAILSAFE);
@@ -162,7 +183,7 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
             }
             FALLTHROUGH;
         case Failsafe_Action_Land:
-            if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND && control_mode != &mode_qland) {
+                if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND) {
                 // never stop a landing if we were already committed
                 if (plane.mission.jump_to_landing_sequence()) {
                     plane.set_mode(mode_auto, ModeReason::BATTERY_FAILSAFE);
@@ -171,13 +192,14 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
             }
             FALLTHROUGH;
         case Failsafe_Action_RTL:
-            if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND && control_mode != &mode_qland && !quadplane.in_vtol_land_sequence()) {
+            if (flight_stage != AP_Vehicle::FixedWing::FLIGHT_LAND) {
                 // never stop a landing if we were already committed
                 set_mode(mode_rtl, ModeReason::BATTERY_FAILSAFE);
                 aparm.throttle_cruise.load();
             }
             break;
 
+	
         case Failsafe_Action_Terminate:
 #if ADVANCED_FAILSAFE == ENABLED
             char battery_type_str[17];
@@ -198,5 +220,55 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
             // don't actually do anything, however we should still flag the system as having hit a failsafe
             // and ensure all appropriate flags are going off to the user
             break;
-    }
+		}
+}
+
+//handles critical vs low battery failsafe actions
+void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
+{	
+     //handle low battery action
+	if (strcmp(type_str,"low") == 0 && canFailsafe()){
+		
+		//if quadplane is not enabled we handle failsafe the default way
+		//todo -- add qoptions bit to limit transitions
+		if (!quadplane.available() || (quadplane.options & quadplane.OPTION_OLD_FS_BATT)) {
+		     handle_failsafe_switch(type_str,action);
+		}
+		//if quadplane is available and we're in a vtol mode and not in a vtol manual mode we perform user selected failsafe
+		else if(quadplane.available() && quadplane.in_vtol_mode() && !quadplane.in_manual_vtol_mode()) {
+		handle_failsafe_switch(type_str,action);
+		quadplane.preventFWtoVTOLTransition = true;			
+		gcs().send_text(MAV_SEVERITY_WARNING, "Low battery aircraft will only transition on landing or manual command");
+		}
+		//if quadplane is in fixed wing flight and we hit low battery failsafe we notify user 
+		//and no longer accept do_vtol_transition commands 
+		//to switch from fixed wing to VTOL flight in missions.
+		//this still allows user switch in manual modes 
+		else if(quadplane.available() && !quadplane.in_vtol_mode()) {
+			handle_failsafe_switch(type_str,(Failsafe_Action)Failsafe_Action_None);
+			quadplane.preventFWtoVTOLTransition = true;	
+			gcs().send_text(MAV_SEVERITY_WARNING, "Low battery aircraft will only transition on landing or manual command");
+		}
+		//we should be in a manual vtol mode here do nothing and log
+		else {
+			handle_failsafe_switch(type_str,(Failsafe_Action)Failsafe_Action_None);		
+			quadplane.preventFWtoVTOLTransition = true;			
+			gcs().send_text(MAV_SEVERITY_WARNING, "Low battery aircraft will only transition on landing or manual command");
+		}			
+						
+	}
+		
+		if (strcmp(type_str,"critical") == 0 && canFailsafe()){
+		gcs().send_text(MAV_SEVERITY_WARNING, "in2 %s", type_str);		
+		//if quadplane is in a manual flight mode we switch to qland
+		if (quadplane.available() && quadplane.in_manual_vtol_mode())
+		{
+		plane.set_mode(mode_qland, ModeReason::BATTERY_FAILSAFE);
+		}
+		//otherwise we handle failsafes normally
+		else{
+		   handle_failsafe_switch(type_str, action);
+	}	
+}
+
 }

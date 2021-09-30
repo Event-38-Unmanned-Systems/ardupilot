@@ -191,7 +191,14 @@ bool Plane::start_command(const AP_Mission::Mission_Command& cmd)
 #endif
 
     case MAV_CMD_DO_VTOL_TRANSITION:
+	    if ((enum MAV_VTOL_STATE)cmd.content.do_vtol_transition.target_state == MAV_VTOL_STATE_MC){
+	    if (!plane.quadplane.preventFWtoVTOLTransition){
         plane.quadplane.handle_do_vtol_transition((enum MAV_VTOL_STATE)cmd.content.do_vtol_transition.target_state);
+			}
+		}
+	    else {
+        plane.quadplane.handle_do_vtol_transition((enum MAV_VTOL_STATE)cmd.content.do_vtol_transition.target_state);
+		}
         break;
 
     case MAV_CMD_DO_ENGINE_CONTROL:
