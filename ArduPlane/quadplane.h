@@ -255,7 +255,10 @@ private:
     float stopping_distance(void);
     
     AP_Int16 transition_time_ms;
-
+	
+	AP_Int16 fs_wait;
+    uint32_t fs_wait_start;
+	
     // transition deceleration, m/s/s
     AP_Float transition_decel;
 

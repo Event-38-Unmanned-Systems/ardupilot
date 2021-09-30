@@ -71,7 +71,7 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
     gcs().send_text(MAV_SEVERITY_WARNING, "Failsafe. Long event on: type=%u/reason=%u", fstype, static_cast<unsigned>(reason));
     //  If the GCS is locked up we allow control to revert to RC
     RC_Channels::clear_overrides();
-    failsafe.state = fstype;
+
     switch (control_mode->mode_number())
     {
     case Mode::Number::MANUAL:
@@ -83,6 +83,7 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
     case Mode::Number::CRUISE:
     case Mode::Number::TRAINING:
     case Mode::Number::CIRCLE:
+		failsafe.state = fstype;
         if(g.fs_action_long == FS_ACTION_LONG_PARACHUTE) {
 #if PARACHUTE == ENABLED
             parachute_release();
@@ -99,6 +100,7 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
     case Mode::Number::QLOITER:
     case Mode::Number::QACRO:
     case Mode::Number::QAUTOTUNE:
+	        failsafe.state = fstype;
         if (quadplane.options & QuadPlane::OPTION_FS_QRTL) {
             set_mode(mode_qrtl, reason);
         } else {
@@ -107,13 +109,14 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
         break;
         
     case Mode::Number::AUTO:
-	if (plane.auto_state.wp_is_land_approach){
+	if (plane.auto_state.wp_is_land_approach|| ((quadplane.fs_wait_start + (quadplane.fs_wait*1000)) > millis())){
 		break;
 	}
 	else FALLTHROUGH;
     case Mode::Number::AVOID_ADSB:
     case Mode::Number::GUIDED:
     case Mode::Number::LOITER:
+	    failsafe.state = fstype;
         if(g.fs_action_long == FS_ACTION_LONG_PARACHUTE) {
 #if PARACHUTE == ENABLED
             parachute_release();
@@ -130,9 +133,12 @@ void Plane::failsafe_long_on_event(enum failsafe_state fstype, ModeReason reason
     case Mode::Number::QRTL:
     case Mode::Number::TAKEOFF:
     case Mode::Number::INITIALISING:
+	    failsafe.state = fstype;
         break;
     }
+	if (failsafe.state  == fstype){
     gcs().send_text(MAV_SEVERITY_INFO, "Flight mode = %u", (unsigned)control_mode->mode_number());
+	}
 }
 
 void Plane::failsafe_short_off_event(ModeReason reason)

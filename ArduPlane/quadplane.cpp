@@ -470,6 +470,15 @@ const AP_Param::GroupInfo QuadPlane::var_info2[] = {
     // @User: Standard
     AP_GROUPINFO("ASSIST_ALT", 16, QuadPlane, assist_alt, 0),
 
+    // @Param: TRANS_FS_WAIT
+    // @DisplayName: failsafe wait time
+    // @Description: Time to wait after a transition until a failsafe short or long event can occurr while in auto modes
+    // @Units: seconds
+    // @Range: 0 120
+    // @Increment: 1
+    // @User: Standard
+    AP_GROUPINFO("TRANS_FS_WAIT", 17, QuadPlane, fs_wait, 0),
+	
     AP_GROUPEND
 };
 
@@ -1619,6 +1628,7 @@ void QuadPlane::update_transition(void)
             transition_start_ms = 0;
             transition_low_airspeed_ms = 0;
             gcs().send_text(MAV_SEVERITY_INFO, "Transition done");
+			fs_wait_start = AP_HAL::millis();
         }
         float trans_time_ms = (float)transition_time_ms.get();
         float transition_scale = (trans_time_ms - transition_timer_ms) / trans_time_ms;
@@ -2055,7 +2065,7 @@ bool QuadPlane::handle_do_vtol_transition(enum MAV_VTOL_STATE state)
     }
     switch (state) {
     case MAV_VTOL_STATE_MC:
-        if (!plane.auto_state.vtol_mode) {
+        if (!plane.auto_state.vtol_mode) {			
             gcs().send_text(MAV_SEVERITY_NOTICE, "Entered VTOL mode");
         }
         plane.auto_state.vtol_mode = true;
