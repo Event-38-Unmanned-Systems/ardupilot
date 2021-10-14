@@ -1503,7 +1503,7 @@ void QuadPlane::update_transition(void)
         (transition_failure > 0) &&
         ((now - transition_start_ms) > ((uint32_t)transition_failure * 1000))) {
         gcs().send_text(MAV_SEVERITY_CRITICAL, "Transition failed, exceeded time limit");
-        plane.set_mode(plane.mode_qland, ModeReason::VTOL_FAILED_TRANSITION);
+        plane.set_mode(plane.mode_qrtl, ModeReason::VTOL_FAILED_TRANSITION);
     }
 
     float aspeed;
@@ -1624,11 +1624,11 @@ void QuadPlane::update_transition(void)
         // transition time, but continue to stabilize
         const uint32_t transition_timer_ms = now - transition_low_airspeed_ms;
         if (transition_timer_ms > (unsigned)transition_time_ms) {
+			fs_wait_start = AP_HAL::millis();
             transition_state = TRANSITION_DONE;
             transition_start_ms = 0;
             transition_low_airspeed_ms = 0;
             gcs().send_text(MAV_SEVERITY_INFO, "Transition done");
-			fs_wait_start = AP_HAL::millis();
         }
         float trans_time_ms = (float)transition_time_ms.get();
         float transition_scale = (trans_time_ms - transition_timer_ms) / trans_time_ms;
