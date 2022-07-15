@@ -2121,6 +2121,31 @@ bool QuadPlane::in_vtol_auto(void) const
 }
 
 /*
+  are we in a VTOL takeoff or landing state?
+ */
+bool QuadPlane::in_vtolTakeoffLand(void) const
+{
+    if (!available()) {
+        return false;
+    }
+    if (plane.control_mode != &plane.mode_auto) {
+        return false;
+    }
+    uint16_t id = plane.mission.get_current_nav_cmd().id;
+    switch (id) {
+    case MAV_CMD_NAV_VTOL_TAKEOFF:
+        return true;
+    case MAV_CMD_NAV_TAKEOFF:
+        return is_vtol_takeoff(id);
+    case MAV_CMD_NAV_VTOL_LAND:
+    case MAV_CMD_NAV_LAND:
+        return is_vtol_land(id);
+    default:
+        return false;
+    }
+}
+
+/*
   are we in a VTOL mode?
  */
 bool QuadPlane::in_vtol_mode(void) const
