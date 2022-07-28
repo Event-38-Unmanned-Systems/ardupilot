@@ -2165,6 +2165,18 @@ bool QuadPlane::in_vtol_mode(void) const
 }
 
 /*
+  are we in QLAND or QRTL?
+ */
+bool QuadPlane::in_qland_qrtl(void) const
+{
+    if (!available()) {
+        return false;
+    }
+    return (plane.control_mode == &plane.mode_qland ||
+            plane.control_mode == &plane.mode_qrtl);
+}
+
+/*
   are we in a manual VTOL mode?
  */
 bool QuadPlane::in_manual_vtol_mode(void) const

@@ -92,6 +92,7 @@ public:
     bool in_vtol_mode(void) const;
 	bool in_vtolTakeoffLand(void) const;
 	bool in_manual_vtol_mode(void) const;
+	bool in_qland_qrtl(void) const;
     void update_throttle_hover();
 
     // vtol help for is_flying()

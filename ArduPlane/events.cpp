@@ -257,7 +257,7 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
 			// handles vtol takeoff 
 		if(quadplane.is_vtol_takeoff(plane.mission.get_current_nav_cmd().id) && (plane.control_mode == &plane.mode_auto)) {
 		    handle_failsafe_switch(type_str,(Failsafe_Action)Failsafe_Action_QLand);
-			gcs().send_text(MAV_SEVERITY_WARNING, "Low battery aircraft during takeoff QLAND");			
+			gcs().send_text(MAV_SEVERITY_WARNING, "Low battery during takeoff QLAND");			
 		}
 		//if in multicopter mode we perform a transition
 		else{
