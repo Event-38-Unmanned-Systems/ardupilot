@@ -127,6 +127,35 @@ void Plane::stabilize_pitch(float speed_scaler)
                                                                                            disable_integrator));
 }
 
+
+void Plane::zeroAileron()
+{
+    
+        SRV_Channels::set_output_scaled(SRV_Channel::k_aileron, 0);
+        return;
+
+}
+void Plane::zeroElevator()
+{
+
+        SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, 0);
+        return;
+
+}
+
+
+void Plane::custom_pitch(float pitchCDGs,int direction)
+{
+    if (direction != 0) {
+        // we are holding the tail down during takeoff. Just convert
+        // from a percentage to a -4500..4500 centidegree angle
+        SRV_Channels::set_output_scaled(SRV_Channel::k_elevator, pitchCDGs*direction);
+        return;
+    }
+
+}
+
+
 /*
   this gives the user control of the aircraft in stabilization modes
  */
@@ -397,7 +426,9 @@ void Plane::stabilize()
         stabilize_training(speed_scaler);
     } else if (control_mode == &mode_acro) {
         stabilize_acro(speed_scaler);
-    } else if ((control_mode == &mode_qstabilize ||
+    }
+	//manual vtol control modes
+	else if ((control_mode == &mode_qstabilize ||
                 control_mode == &mode_qhover ||
                 control_mode == &mode_qloiter ||
                 control_mode == &mode_qland ||
@@ -406,7 +437,66 @@ void Plane::stabilize()
                 control_mode == &mode_qautotune) &&
                !quadplane.in_tailsitter_vtol_transition()) {
         quadplane.control_run();
-    } else {
+    } 
+	//check if in a vtol landing sequence
+else if (quadplane.in_vtol_land_sequence()){
+	//check if we're translating towards the landing point
+	if (quadplane.in_vtol_land_approach()){
+		//check if we want to control surfaces while detransitioning and translating
+		if (quadplane.srfCtrlPit){
+		//stabilize pitch using the elevator
+        stabilize_pitch(speed_scaler);
+		}
+		//set the elevator to neuteral
+		else{zeroElevator();}
+	}
+	//check if we are in our position one of descent and if we want to apply an constant offset to our elevator
+	else if (quadplane.in_vtol_land_descent() && quadplane.qeleDir != 0){
+        custom_pitch(quadplane.qEleOffset, quadplane.qeleDir);
+	}
+	//check if we are in our position two of our descent and if we want to apply an constant offset to our elevator
+	else if (quadplane.in_vtol_land_final() && quadplane.qeleDir != 0){
+        custom_pitch(quadplane.qEleOffset, quadplane.qeleDir);
+	}
+    //if we are not in any position of landing or do not want to add a custom offset 
+	else{
+		//check to see if we want to control elevator surfaces
+       		if (quadplane.srfCtrlPit){
+				//stabilize pitch using elevator
+			stabilize_pitch(speed_scaler);
+		}
+		//else zero elevator
+		else{zeroElevator();}
+	}
+		//check to see if we want to stabilize roll in quadplane modes	
+	   if (quadplane.srfCtrlRll){
+		   //use ailerons to stabilize roll
+		 stabilize_roll(speed_scaler);
+	   }
+	   //else zero the ailerons
+	   else { zeroAileron();}
+	    stabilize_yaw(speed_scaler);	
+    }
+//check if we're in auto and in a vtol takeoff
+else if (plane.control_mode == &plane.mode_auto && quadplane.is_vtol_takeoff(plane.mission.get_current_nav_cmd().id)){
+		//check to see if we want to stabilize pitch we don't give the option to set a constant pitch here because we disable weathervane in takeoff. 
+		if (quadplane.srfCtrlPit){
+        stabilize_pitch(speed_scaler);
+		}
+		//zero pitch
+		else{zeroElevator();}
+	   //check to see if we want to stabilize roll in quadplane modes	
+	   if (quadplane.srfCtrlRll){
+		   //use ailerons to stabilize roll
+		 stabilize_roll(speed_scaler);
+	   }
+	   //else zero the ailerons
+	   else { zeroAileron();}
+	   
+        stabilize_yaw(speed_scaler);
+}
+//normal surface control outside of vtol modes
+else {
         if (g.stick_mixing == STICK_MIXING_FBW && control_mode != &mode_stabilize) {
             stabilize_stick_mixing_fbw();
         }

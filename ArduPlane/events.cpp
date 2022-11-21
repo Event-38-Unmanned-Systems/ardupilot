@@ -285,7 +285,6 @@ void Plane::handle_battery_failsafe(const char *type_str, const int8_t action)
 	}
 		
 		if (strcmp(type_str,"critical") == 0 && canFailsafe()){
-		gcs().send_text(MAV_SEVERITY_WARNING, "in2 %s", type_str);		
 		//if quadplane is in a manual flight mode we switch to qland 
 		//handle battery failsafe in vtol takeoff
 		if (quadplane.available() && ((quadplane.in_manual_vtol_mode() || control_mode == &mode_qrtl) || (quadplane.is_vtol_takeoff(plane.mission.get_current_nav_cmd().id) && (plane.control_mode == &plane.mode_auto)) ) )

@@ -332,6 +332,11 @@ private:
     AP_Float acro_pitch_rate;
     AP_Float acro_yaw_rate;
 
+    AP_Int8 srfCtrlRll;
+    AP_Int8 srfCtrlPit;
+    AP_Float qEleOffset;
+    AP_Int8 qeleDir;
+
     // time we last got an EKF yaw reset
     uint32_t ekfYawReset_ms;
 
@@ -345,6 +350,7 @@ private:
     struct {
         AP_Float gain;
         AP_Float min_roll;
+	AP_Float yaw_rat;
         uint32_t last_pilot_input_ms;
         float last_output;
     } weathervane;

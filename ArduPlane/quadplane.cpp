@@ -478,7 +478,45 @@ const AP_Param::GroupInfo QuadPlane::var_info2[] = {
     // @Increment: 1
     // @User: Standard
     AP_GROUPINFO("TRANS_FS_WAIT", 17, QuadPlane, fs_wait, 0),
-	
+    // @Param: WVANE_YAWRAT
+    // @DisplayName: Weathervaning min roll
+    // @Description: yaw rate used to scale weather vaning
+    // @Range: 0 500
+    // @Increment: 10
+    // @User: Standard
+    AP_GROUPINFO("WVANE_YAWRAT", 18, QuadPlane, weathervane.yaw_rat, 100),	
+    // @Param: srfCtrlPit
+    // @DisplayName: controls weither to use plane surfaces to stabilize pitch
+    // @Description: 1 on 0 off
+    // @Range: 0 1
+    // @Increment: 10
+    // @User: Standard
+    AP_GROUPINFO("Srf_Ctrl_Pit", 19, QuadPlane, srfCtrlPit, 1),
+    // @Param: surface control roll
+    // @DisplayName: controls weither to use plane surfaces to stabilize pitch
+    // @Description: 1 on 0 off
+    // @Range: 0 500
+    // @Increment: 10
+    // @User: Standard
+    AP_GROUPINFO("Srf_Ctrl_Rll", 20, QuadPlane, srfCtrlRll, 1),
+    // @Param: eleOffset
+    // @DisplayName: q elevator offset
+    // @Description: offset in centidegrees for the elevator during qland
+    // @Range: 0 500
+    // @Increment: 10
+    // @User: Standard
+    AP_GROUPINFO("Ele_Offset", 21, QuadPlane, qEleOffset, 10),
+	// @Param: WVANE_YAWRAT
+    // @DisplayName: Weathervaning min roll
+    // @Description: yaw rate used to scale weather vaning
+    // @Range: 0 500	// @Param: WVANE_YAWRAT
+    // @DisplayName: Weathervaning min roll
+    // @Description: yaw rate used to scale weather vaning
+    // @Range: 0 500
+    // @Increment: 10
+    // @User: Standard
+    AP_GROUPINFO("Ele_Dir", 22, QuadPlane, qeleDir, 1),
+
     AP_GROUPEND
 };
 
@@ -1966,7 +2004,9 @@ void QuadPlane::control_run(void)
     if (!initialised) {
         return;
     }
-
+	
+	float speed_scaler;
+	
     switch (plane.control_mode->mode_number()) {
     case Mode::Number::QACRO:
         control_qacro();
@@ -1978,8 +2018,21 @@ void QuadPlane::control_run(void)
         control_hover();
         break;
     case Mode::Number::QLOITER:
+    	control_loiter();
+        break;
     case Mode::Number::QLAND:
         control_loiter();
+		//check to see if we want to use a custom elevator setting for qland
+		if (qeleDir != 0){
+        plane.custom_pitch(qEleOffset, qeleDir);
+		}
+		//if we do not want to use a custom elevator pitch we check if we want to stabilize using the elevator 
+		else if (srfCtrlPit){
+	    speed_scaler = plane.get_speed_scaler();
+		plane.stabilize_pitch(speed_scaler);
+		}
+		//if we do not want to use a custom pitch or stabilize using the elevator we zero the elevator
+		else{plane.zeroElevator();}
         break;
     case Mode::Number::QRTL:
         control_qrtl();
@@ -1994,12 +2047,22 @@ void QuadPlane::control_run(void)
     }
 
     // we also stabilize using fixed wing surfaces
-    float speed_scaler = plane.get_speed_scaler();
+     speed_scaler = plane.get_speed_scaler();
     if (plane.control_mode->mode_number() == Mode::Number::QACRO) {
         plane.stabilize_acro(speed_scaler);
     } else {
+	//check to see if we want to control roll in quadplane modes 
+	if(srfCtrlRll){
         plane.stabilize_roll(speed_scaler);
+	}
+	//if we don't want to stabilize roll with the surfaces we zero the ailerons
+	else{plane.zeroAileron();}
+	//check to see if we want to stabilize pitch using the elevator
+	if(srfCtrlPit && plane.control_mode->mode_number() != Mode::Number::QLAND){
         plane.stabilize_pitch(speed_scaler);
+	}
+	//if we dont want to we zero the elevator
+	else if (plane.control_mode->mode_number() != Mode::Number::QLAND){plane.zeroElevator();}
     }
 }
 
@@ -2965,14 +3028,16 @@ float QuadPlane::get_weathervane_yaw_rate_cds(void)
     /*
       we only do weathervaning in modes where we are doing VTOL
       position control. We also don't do it if the pilot has given any
-      yaw input in the last 3 seconds.
+      yaw input in the last 1 seconds.
     */
+	
     if (!in_vtol_mode() ||
         !motors->armed() ||
         weathervane.gain <= 0 ||
         plane.control_mode == &plane.mode_qstabilize ||
         plane.control_mode == &plane.mode_qhover ||
-        plane.control_mode == &plane.mode_qautotune) {
+        plane.control_mode == &plane.mode_qautotune ||
+	(plane.control_mode == &plane.mode_auto && is_vtol_takeoff(plane.mission.get_current_nav_cmd().id))) {
         weathervane.last_output = 0;
         return 0;
     }
@@ -2982,7 +3047,7 @@ float QuadPlane::get_weathervane_yaw_rate_cds(void)
         weathervane.last_output = 0;
         return 0;
     }
-    if (tnow - weathervane.last_pilot_input_ms < 3000) {
+    if (tnow - weathervane.last_pilot_input_ms < 1000) {
         weathervane.last_output = 0;
         return 0;
     }
@@ -3003,10 +3068,10 @@ float QuadPlane::get_weathervane_yaw_rate_cds(void)
         output = 0;
     }
     weathervane.last_output = 0.98f * weathervane.last_output + 0.02f * output;
-
+		
     // scale over half of yaw_rate_max. This gives the pilot twice the
     // authority of the weathervane controller
-    return weathervane.last_output * (yaw_rate_max/2) * 100;
+    return weathervane.last_output * (weathervane.yaw_rat) * 100;
 }
 
 /*
