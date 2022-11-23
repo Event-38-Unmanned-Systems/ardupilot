@@ -2004,9 +2004,7 @@ void QuadPlane::control_run(void)
     if (!initialised) {
         return;
     }
-	
-	float speed_scaler;
-	
+		
     switch (plane.control_mode->mode_number()) {
     case Mode::Number::QACRO:
         control_qacro();
@@ -2018,21 +2016,8 @@ void QuadPlane::control_run(void)
         control_hover();
         break;
     case Mode::Number::QLOITER:
-    	control_loiter();
-        break;
     case Mode::Number::QLAND:
         control_loiter();
-		//check to see if we want to use a custom elevator setting for qland
-		if (qeleDir != 0){
-        plane.custom_pitch(qEleOffset, qeleDir);
-		}
-		//if we do not want to use a custom elevator pitch we check if we want to stabilize using the elevator 
-		else if (srfCtrlPit){
-	    speed_scaler = plane.get_speed_scaler();
-		plane.stabilize_pitch(speed_scaler);
-		}
-		//if we do not want to use a custom pitch or stabilize using the elevator we zero the elevator
-		else{plane.zeroElevator();}
         break;
     case Mode::Number::QRTL:
         control_qrtl();
@@ -2047,7 +2032,7 @@ void QuadPlane::control_run(void)
     }
 
     // we also stabilize using fixed wing surfaces
-     speed_scaler = plane.get_speed_scaler();
+     	float speed_scaler = plane.get_speed_scaler();
     if (plane.control_mode->mode_number() == Mode::Number::QACRO) {
         plane.stabilize_acro(speed_scaler);
     } else {
@@ -2058,11 +2043,11 @@ void QuadPlane::control_run(void)
 	//if we don't want to stabilize roll with the surfaces we zero the ailerons
 	else{plane.zeroAileron();}
 	//check to see if we want to stabilize pitch using the elevator
-	if(srfCtrlPit && plane.control_mode->mode_number() != Mode::Number::QLAND){
+	if(srfCtrlPit){
         plane.stabilize_pitch(speed_scaler);
 	}
 	//if we dont want to we zero the elevator
-	else if (plane.control_mode->mode_number() != Mode::Number::QLAND){plane.zeroElevator();}
+	else {plane.zeroElevator();}
     }
 }
 
