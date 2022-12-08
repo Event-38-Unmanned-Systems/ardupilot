@@ -21,7 +21,7 @@ void Plane::failsafe_short_on_event(enum failsafe_state fstype, ModeReason reaso
         if(g.fs_action_short == FS_ACTION_SHORT_FBWA) {
             set_mode(mode_fbwa, reason);
         } else {
-            set_mode(mode_circle, reason);
+            set_mode(mode_loiter, reason);
         }
         break;
 
@@ -50,18 +50,18 @@ void Plane::failsafe_short_on_event(enum failsafe_state fstype, ModeReason reaso
 	else FALLTHROUGH;
     case Mode::Number::AVOID_ADSB:
     case Mode::Number::GUIDED:
-    case Mode::Number::LOITER:
         if(g.fs_action_short != FS_ACTION_SHORT_BESTGUESS) {
             failsafe.saved_mode_number = control_mode->mode_number();
             failsafe.saved_mode_set = true;
             if(g.fs_action_short == FS_ACTION_SHORT_FBWA) {
                 set_mode(mode_fbwa, reason);
             } else {
-                set_mode(mode_circle, reason);
+                set_mode(mode_loiter, reason);
             }
         }
         break;
-
+		
+    case Mode::Number::LOITER:
     case Mode::Number::CIRCLE:
     case Mode::Number::TAKEOFF:
     case Mode::Number::RTL:
@@ -161,7 +161,7 @@ void Plane::failsafe_short_off_event(ModeReason reason)
 
     // re-read the switch so we can return to our preferred mode
     // --------------------------------------------------------
-    if (control_mode == &mode_circle && failsafe.saved_mode_set) {
+    if (control_mode == &mode_loiter && failsafe.saved_mode_set) {
         failsafe.saved_mode_set = false;
         set_mode_by_number(failsafe.saved_mode_number, reason);
     }

@@ -140,22 +140,18 @@ void Plane::calc_airspeed_errors()
         if (g2.flight_options & FlightOptions::CRUISE_TRIM_AIRSPEED) {
             target_airspeed_cm = aparm.airspeed_cruise_cm;
         } else if (g2.flight_options & FlightOptions::CRUISE_TRIM_THROTTLE) {
-            float control_min = 0.0f;
             float control_mid = 0.0f;
             const float control_max = channel_throttle->get_range();
             const float control_in = get_throttle_input();
             switch (channel_throttle->get_type()) {
                 case RC_Channel::RC_CHANNEL_TYPE_ANGLE:
-                    control_min = -control_max;
                     break;
                 case RC_Channel::RC_CHANNEL_TYPE_RANGE:
                     control_mid = channel_throttle->get_control_mid();
                     break;
             }
             if (control_in <= control_mid) {
-                target_airspeed_cm = linear_interpolate(aparm.airspeed_min * 100, aparm.airspeed_cruise_cm,
-                                                        control_in,
-                                                        control_min, control_mid);
+				target_airspeed_cm = aparm.airspeed_cruise_cm;
             } else {
                 target_airspeed_cm = linear_interpolate(aparm.airspeed_cruise_cm, aparm.airspeed_max * 100,
                                                         control_in,

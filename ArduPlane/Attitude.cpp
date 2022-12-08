@@ -444,8 +444,14 @@ else if (quadplane.in_vtol_land_sequence()){
 	if (quadplane.in_vtol_land_approach()){
 		//check if we want to control surfaces while detransitioning and translating
 		if (quadplane.srfCtrlPit){
-		//stabilize pitch using the elevator
-        stabilize_pitch(speed_scaler);
+			
+			if (quadplane.qeleDir != 0 && quadplane.poscontrol.state == quadplane.QPOS_POSITION2){
+					custom_pitch(quadplane.qEleOffset, quadplane.qeleDir);
+		}
+		 else {
+		           //stabilize pitch using the elevator
+                   stabilize_pitch(speed_scaler);
+		}
 		}
 		//set the elevator to neuteral
 		else{zeroElevator();}

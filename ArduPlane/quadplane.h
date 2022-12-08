@@ -176,6 +176,9 @@ private:
     
     // maximum vertical velocity the pilot may request
     AP_Int16 pilot_velocity_z_max;
+	
+	 // maximum vertical velocity down the pilot may request
+    AP_Int16 pilot_velocity_z_max_dn;
 
     // vertical acceleration the pilot may request
     AP_Int16 pilot_accel_z;
