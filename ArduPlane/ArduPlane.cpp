@@ -106,6 +106,9 @@ const AP_Scheduler::Task Plane::scheduler_tasks[] = {
 #if LANDING_GEAR_ENABLED == ENABLED
     SCHED_TASK(landing_gear_update, 5, 50),
 #endif
+#if AP_OPENDRONEID_ENABLED
+    SCHED_TASK_CLASS(AP_OpenDroneID, &plane.g2.opendroneid,  update,                   10,  50),
+#endif
 };
 
 constexpr int8_t Plane::_failsafe_priorities[7];

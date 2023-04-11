@@ -84,6 +84,7 @@
 #include <AP_Gripper/AP_Gripper.h>
 #include <AP_Landing/AP_Landing.h>
 #include <AP_LandingGear/AP_LandingGear.h>     // Landing Gear library
+#include <AP_OpenDroneID/AP_OpenDroneID.h>
 
 #include "GCS_Mavlink.h"
 #include "GCS_Plane.h"

@@ -1208,6 +1208,12 @@ const AP_Param::GroupInfo ParametersG2::var_info[] = {
     // @Group: LGR_
     // @Path: ../libraries/AP_LandingGear/AP_LandingGear.cpp
     AP_SUBGROUPINFO(landing_gear, "LGR_", 16, ParametersG2, AP_LandingGear),
+	#endif
+	
+	#if AP_OPENDRONEID_ENABLED
+    // @Group: DID_
+    // @Path: ../libraries/AP_OpenDroneID/AP_OpenDroneID.cpp
+    AP_SUBGROUPINFO(opendroneid, "DID_", 60, ParametersG2, AP_OpenDroneID),
 #endif
 
     // @Param: DSPOILER_CROW_W1

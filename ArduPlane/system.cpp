@@ -185,6 +185,10 @@ void Plane::init_ardupilot()
     // disable safety if requested
     BoardConfig.init_safety();
 
+#if AP_OPENDRONEID_ENABLED
+    g2.opendroneid.init();
+#endif
+
 #if AP_PARAM_KEY_DUMP
     AP_Param::show_all(hal.console, true);
 #endif
