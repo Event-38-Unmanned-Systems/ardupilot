@@ -595,6 +595,8 @@ def start_vehicle(binary, autotest, opts, stuff, loc=None):
         cmd.append("-w")
     cmd.extend(["--model", stuff["model"]])
     cmd.extend(["--speedup", str(opts.speedup)])
+    if opts.sysid is not None:
+        cmd.extend(["--sysid", str(opts.sysid)])
     if opts.sitl_instance_args:
         # this could be a lot better:
         cmd.extend(opts.sitl_instance_args.split(" "))
@@ -957,6 +959,10 @@ group_sim.add_option("-Z", "--swarm",
 group_sim.add_option("--flash-storage",
                      action='store_true',
                      help="enable use of flash storage emulation")
+group_sim.add_option("", "--sysid",
+                     type='int',
+                     default=None,
+                     help="Set SYSID_THISMAV")                     
 parser.add_option_group(group_sim)
 
 

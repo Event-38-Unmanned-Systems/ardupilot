@@ -36,6 +36,8 @@ public:
     virtual const char* get_custom_defaults_file() const {
         return HAL_PARAM_DEFAULTS_PATH;
     }
+	
+	    virtual void set_cmdline_parameters() {};
 
     // run a debug shall on the given stream if possible. This is used
     // to support dropping into a debug shell to run firmware upgrade

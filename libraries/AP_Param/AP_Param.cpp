@@ -35,6 +35,10 @@
 #include <AP_InternalError/AP_InternalError.h>
 #include <stdio.h>
 
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    #include <SITL/SITL.h>
+#endif
+
 extern const AP_HAL::HAL &hal;
 
 uint16_t AP_Param::sentinal_offset;
@@ -1469,6 +1473,9 @@ void AP_Param::reload_defaults_file(bool last_pass)
             printf("Failed to load defaults from %s\n", default_file);
         }
     }
+#endif
+#if CONFIG_HAL_BOARD == HAL_BOARD_SITL
+    hal.util->set_cmdline_parameters();
 #endif
 }
 

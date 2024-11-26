@@ -49,6 +49,8 @@ public:
 
     // return true if the reason for the reboot was a watchdog reset
     bool was_watchdog_reset() const override { return getenv("SITL_WATCHDOG_RESET") != nullptr; }
+
+    void set_cmdline_parameters() override;
     
 private:
     SITL_State *sitlState;
