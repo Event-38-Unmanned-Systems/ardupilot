@@ -420,7 +420,7 @@ void AP_AHRS::update_AOA_SSA(void)
         return;
     }
     _last_AOA_update_ms = now;
-    
+
     Vector3f aoa_velocity, aoa_wind;
 
     // get velocity and wind
@@ -516,6 +516,13 @@ void AP_AHRS::update_nmea_out()
         _nmea_out->update();
     }
 #endif
+}
+
+bool AP_AHRS::handle_external_position_estimate(const Location &loc, float pos_accuracy, uint32_t timestamp_ms) {
+    _last_ext_location = loc;
+    _last_ext_pos_accuracy = pos_accuracy;
+    _last_ext_timestamp_ms = timestamp_ms;
+    return true;
 }
 
 // singleton instance

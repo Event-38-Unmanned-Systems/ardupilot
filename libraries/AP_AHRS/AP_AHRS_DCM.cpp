@@ -25,6 +25,7 @@
 #include <GCS_MAVLink/GCS.h>
 #include <AP_GPS/AP_GPS.h>
 #include <AP_Baro/AP_Baro.h>
+#include <stdio.h>
 
 extern const AP_HAL::HAL& hal;
 
@@ -69,7 +70,7 @@ AP_AHRS_DCM::update(bool skip_ins_update)
 {
     // support locked access functions to AHRS data
     WITH_SEMAPHORE(_rsem);
-    
+
     float delta_t;
 
     if (_last_startup_ms == 0) {
@@ -178,7 +179,7 @@ AP_AHRS_DCM::reset(bool recover_eulers)
 {
     // support locked access functions to AHRS data
     WITH_SEMAPHORE(_rsem);
-    
+
     // reset the integration terms
     _omega_I.zero();
     _omega_P.zero();
@@ -489,7 +490,7 @@ AP_AHRS_DCM::drift_correction_yaw(void)
         // don't do any yaw correction while calibrating
         return;
     }
-    
+
     if (AP_AHRS_DCM::use_compass()) {
         /*
           we are using compass for yaw
@@ -740,9 +741,21 @@ AP_AHRS_DCM::drift_correction(float deltat)
         // dead-reckoning from then on
         _have_position = true;
     } else {
-        // update dead-reckoning position estimate
-        _position_offset_north += velocity.x * _ra_deltat;
-        _position_offset_east  += velocity.y * _ra_deltat;
+        // If GPS is unavailable, look for external position estimates
+        if (_last_ext_timestamp_ms != 0) {
+            _last_lat = _last_ext_location.lat;
+            _last_lng = _last_ext_location.lng;
+            last_correction_time = _last_ext_timestamp_ms;
+            _have_position = true;
+            _have_gps_lock = true;
+            _position_offset_north = 0;
+            _position_offset_east = 0;
+            clear_ext_position_measurement();
+        } else {
+            // update dead-reckoning position estimate
+            _position_offset_north += velocity.x * _ra_deltat;
+            _position_offset_east  += velocity.y * _ra_deltat;
+        }
     }
 
     // see if this is our first time through - in which case we
@@ -761,7 +774,7 @@ AP_AHRS_DCM::drift_correction(float deltat)
         // waiting for more data
         return;
     }
-    
+
     bool using_gps_corrections = false;
     float ra_scale = 1.0f/(_ra_deltat*GRAVITY_MSS);
 

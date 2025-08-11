@@ -220,7 +220,7 @@ public:
     bool locked() const;
 
     // return a bitmap of active channels. Used by libraries to loop
-    // over active channels to send to all active channels    
+    // over active channels to send to all active channels
     static uint8_t active_channel_mask(void) { return mavlink_active; }
 
     // return a bitmap of streaming channels
@@ -234,7 +234,7 @@ public:
     static bool is_private(mavlink_channel_t _chan) {
         return (mavlink_private & (1U<<(unsigned)_chan)) != 0;
     }
-    
+
     // return true if channel is private
     bool is_private(void) const { return is_private(chan); }
 
@@ -248,7 +248,7 @@ public:
       allow forwarding of packets / heartbeats to be blocked as required by some components to reduce traffic
     */
     static void disable_channel_routing(mavlink_channel_t chan) { routing.no_route_mask |= (1U<<(chan-MAVLINK_COMM_0)); }
-    
+
     /*
       search for a component in the routing table with given mav_type and retrieve it's sysid, compid and channel
       returns if a matching component is found
@@ -316,6 +316,7 @@ protected:
 
     MAV_RESULT handle_command_int_do_set_home(const mavlink_command_int_t &packet);
     virtual MAV_RESULT handle_command_int_packet(const mavlink_command_int_t &packet);
+    MAV_RESULT handle_command_int_external_position_estimate(const mavlink_command_int_t &packet);
 
     virtual bool set_home_to_current_location(bool lock) = 0;
     virtual bool set_home(const Location& loc, bool lock) = 0;
@@ -444,6 +445,8 @@ protected:
     virtual bool allow_disarm() const { return true; }
 
     void manual_override(RC_Channel *c, int16_t value_in, uint16_t offset, float scaler, const uint32_t tnow, bool reversed = false);
+
+    bool location_from_command_t(const mavlink_command_int_t &in, Location &out);
 
 private:
 
@@ -577,7 +580,7 @@ private:
 
     // time when we missed sending a parameter for GCS
     static uint32_t reserve_param_space_start_ms;
-    
+
     // bitmask of what mavlink channels are active
     static uint8_t mavlink_active;
 
@@ -597,7 +600,7 @@ private:
     };
 
     struct pending_param_reply {
-        mavlink_channel_t chan;        
+        mavlink_channel_t chan;
         float value;
         enum ap_var_type p_type;
         int16_t param_index;
@@ -656,7 +659,7 @@ private:
 
     struct pending_ftp {
         uint32_t offset;
-        mavlink_channel_t chan;        
+        mavlink_channel_t chan;
         uint16_t seq_number;
         FTP_OP opcode;
         FTP_OP req_opcode;
@@ -729,11 +732,11 @@ private:
       since boot in milliseconds
      */
     uint32_t correct_offboard_timestamp_usec_to_ms(uint64_t offboard_usec, uint16_t payload_size);
-    
+
     mavlink_signing_t signing;
     static mavlink_signing_streams_t signing_streams;
     static uint32_t last_signing_save_ms;
-    
+
     static StorageAccess _signing_storage;
     static bool signing_key_save(const struct SigningKey &key);
     static bool signing_key_load(struct SigningKey &key);
@@ -750,7 +753,7 @@ private:
     } alternative;
 
     JitterCorrection lag_correction;
-    
+
     // we cache the current location and send it even if the AHRS has
     // no idea where we are:
     struct Location global_position_current_loc;

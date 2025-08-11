@@ -87,6 +87,12 @@ public:
     // init sets up INS board orientation
     virtual void init();
 
+    uint32_t _last_ext_timestamp_ms;
+
+    void clear_ext_position_measurement() {
+        _last_ext_timestamp_ms = 0;;
+    }
+
     // Accessors
     void set_fly_forward(bool b) {
         _flags.fly_forward = b;
@@ -95,6 +101,7 @@ public:
     bool get_fly_forward(void) const {
         return _flags.fly_forward;
     }
+    bool handle_external_position_estimate(const Location &loc, float pos_accuracy, uint32_t timestamp_ms);
 
     /*
       set the "likely flying" flag. This is not guaranteed to be
@@ -215,7 +222,7 @@ public:
 
     // see if EKF lane switching is possible to avoid EKF failsafe
     virtual void check_lane_switch(void) {}
-    
+
     // Euler angles (radians)
     float roll;
     float pitch;
@@ -625,6 +632,9 @@ protected:
 
     // time when likely_flying last went true
     uint32_t _last_flying_ms;
+
+    Location _last_ext_location;
+    float _last_ext_pos_accuracy;
 
     // calculate sin/cos of roll/pitch/yaw from rotation
     void calc_trig(const Matrix3f &rot,

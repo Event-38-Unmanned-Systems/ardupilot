@@ -120,7 +120,7 @@ bool GCS_MAVLINK::init(uint8_t instance)
     }
     // since tcdrain() and TCSADRAIN may not be implemented...
     hal.scheduler->delay(1);
-    
+
     _port->set_flow_control(old_flow_control);
 
     // now change back to desired baudrate
@@ -140,7 +140,7 @@ bool GCS_MAVLINK::init(uint8_t instance)
     if (status == nullptr) {
         return false;
     }
-    
+
     if (mavlink_protocol == AP_SerialManager::SerialProtocol_MAVLink2) {
         // load signing key
         load_signing_key();
@@ -1324,7 +1324,7 @@ GCS_MAVLINK::update_receive(uint32_t max_time_us)
     {
         const uint8_t c = (uint8_t)_port->read();
         const uint32_t protocol_timeout = 4000;
-        
+
         if (alternative.handler &&
             now_ms - alternative.last_mavlink_ms > protocol_timeout) {
             /*
@@ -1336,7 +1336,7 @@ GCS_MAVLINK::update_receive(uint32_t max_time_us)
                 alternative.last_alternate_ms = now_ms;
                 gcs_alternative_active[chan] = true;
             }
-            
+
             /*
               we may also try parsing as MAVLink if we haven't had a
               successful parse on the alternative protocol for 4s
@@ -1461,7 +1461,7 @@ GCS_MAVLINK::update_receive(uint32_t max_time_us)
     }
 #endif
 
-    hal.util->perf_end(_perf_update);    
+    hal.util->perf_end(_perf_update);
 }
 
 /*
@@ -1537,7 +1537,7 @@ void GCS_MAVLINK::send_rc_channels() const
         values[15],
         values[16],
         values[17],
-        receiver_rssi);        
+        receiver_rssi);
 }
 
 bool GCS_MAVLINK::sending_mavlink1() const
@@ -1788,7 +1788,7 @@ void GCS::send_statustext(MAV_SEVERITY severity, uint8_t dest_bitmask, const cha
     strncpy(statustext.msg.text, text, sizeof(statustext.msg.text));
 
     WITH_SEMAPHORE(_statustext_sem);
-    
+
     // The force push will ensure comm links do not block other comm links forever if they fail.
     // If we push to a full buffer then we overwrite the oldest entry, effectively removing the
     // block but not until the buffer fills up.
@@ -2419,7 +2419,7 @@ void GCS_MAVLINK::send_servo_output_raw()
         if (values[i] == 65535) {
             values[i] = 0;
         }
-    }    
+    }
     mavlink_msg_servo_output_raw_send(
             chan,
             AP_HAL::micros(),
@@ -2501,7 +2501,7 @@ void GCS_MAVLINK::zero_rc_outputs()
 }
 
 /*
-  handle a MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN command 
+  handle a MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN command
 
   Optionally disable PX4IO overrides. This is done for quadplanes to
   prevent the mixer running while rebooting which can start the VTOL
@@ -2915,9 +2915,9 @@ void GCS_MAVLINK::handle_common_vision_position_estimate_data(const uint64_t use
 {
     // correct offboard timestamp to be in local ms since boot
     uint32_t timestamp_ms = correct_offboard_timestamp_usec_to_ms(usec, payload_size);
-    
+
     // sensor assumed to be at 0,0,0 body-frame; need parameters for this?
-    // or a new message 
+    // or a new message
     const Vector3f sensor_offset = {};
     const Vector3f pos = {
         x,
@@ -2989,7 +2989,7 @@ void GCS_MAVLINK::handle_att_pos_mocap(const mavlink_message_t &msg)
                                angErr,
                                timestamp_ms,
                                reset_timestamp_ms);
-   
+
     // calculate euler orientation for logging
     float roll;
     float pitch;
@@ -3213,7 +3213,7 @@ void GCS_MAVLINK::handle_common_message(const mavlink_message_t &msg)
 
     case MAVLINK_MSG_ID_DATA96:
         handle_data_packet(msg);
-        break;        
+        break;
 
     case MAVLINK_MSG_ID_VISION_POSITION_DELTA:
         handle_vision_position_delta(msg);
@@ -3651,6 +3651,33 @@ MAV_RESULT GCS_MAVLINK::handle_command_do_set_home(const mavlink_command_long_t 
     return MAV_RESULT_ACCEPTED;
 }
 
+MAV_RESULT GCS_MAVLINK::handle_command_int_external_position_estimate(const mavlink_command_int_t &packet)
+{
+    if (packet.frame != MAV_FRAME_GLOBAL ||
+        !isnan(packet.z)) {
+        // we only support global frame without altitude
+        return MAV_RESULT_DENIED;
+    }
+
+    // cope with the NaN when convering to Location
+    Location loc;
+    mavlink_command_int_t p2 = packet;
+    p2.z = 0;
+
+    if (!location_from_command_t(p2, loc)) {
+        return MAV_RESULT_DENIED;
+    }
+    uint32_t timestamp_ms = correct_offboard_timestamp_usec_to_ms(uint64_t(p2.param1*1e6), PAYLOAD_SIZE(chan, COMMAND_INT));
+    const uint32_t processing_ms = p2.param2*1e3;
+    const float pos_accuracy = p2.param3;
+    if (timestamp_ms > processing_ms) {
+        timestamp_ms -= processing_ms;
+    }
+    if (!AP::ahrs().handle_external_position_estimate(loc, pos_accuracy, timestamp_ms)) {
+        return MAV_RESULT_FAILED;
+    }
+    return MAV_RESULT_ACCEPTED;
+}
 
 MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t &packet)
 {
@@ -3725,7 +3752,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
     case MAV_CMD_BATTERY_RESET:
         result = handle_command_battery_reset(packet);
         break;
-        
+
     case MAV_CMD_PREFLIGHT_UAVCAN:
         result = handle_command_preflight_can(packet);
         break;
@@ -3805,7 +3832,7 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
     case MAV_CMD_FIXED_MAG_CAL_YAW:
         result = handle_fixed_mag_cal_yaw(packet);
         break;
-        
+
     default:
         result = MAV_RESULT_UNSUPPORTED;
         break;
@@ -3814,12 +3841,38 @@ MAV_RESULT GCS_MAVLINK::handle_command_long_packet(const mavlink_command_long_t 
     return result;
 }
 
+bool GCS_MAVLINK::location_from_command_t(const mavlink_command_int_t &in, Location &out)
+{
+    if (!command_long_stores_location((MAV_CMD)in.command)) {
+        return false;
+    }
+
+    // integer storage imposes limits on the altitudes we can accept:
+    if (isnan(in.z) || fabsf(in.z) > LOCATION_ALT_MAX_M) {
+        return false;
+    }
+
+    Location::AltFrame frame;
+    if (!mavlink_coordinate_frame_to_location_alt_frame((MAV_FRAME)in.frame, frame)) {
+        // unknown coordinate frame
+        return false;
+    }
+
+    out.lat = in.x;
+    out.lng = in.y;
+
+    out.set_alt_cm(int32_t(in.z * 100), frame);
+
+    return true;
+}
+
 bool GCS_MAVLINK::command_long_stores_location(const MAV_CMD command)
 {
     switch(command) {
     case MAV_CMD_DO_SET_HOME:
     case MAV_CMD_DO_SET_ROI:
     case MAV_CMD_NAV_TAKEOFF:
+    case MAV_CMD_EXTERNAL_POSITION_ESTIMATE:
         return true;
     default:
         return false;
@@ -3969,6 +4022,8 @@ MAV_RESULT GCS_MAVLINK::handle_command_int_packet(const mavlink_command_int_t &p
         return handle_command_do_set_roi(packet);
     case MAV_CMD_DO_SET_HOME:
         return handle_command_int_do_set_home(packet);
+    case MAV_CMD_EXTERNAL_POSITION_ESTIMATE:
+        return handle_command_int_external_position_estimate(packet);
     default:
         break;
     }
