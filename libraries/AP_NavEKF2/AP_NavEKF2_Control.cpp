@@ -269,7 +269,7 @@ void NavEKF2_core::setAidingMode()
             gcs().send_text(MAV_SEVERITY_WARNING, "EKF2 IMU%u has stopped aiding",(unsigned)imu_index);
             // When not aiding, estimate orientation & height fusing synthetic constant position and zero velocity measurement to constrain tilt errors
             posTimeout = true;
-            velTimeout = true;            
+            velTimeout = true;
             // Reset the normalised innovation to avoid false failing bad fusion tests
             velTestRatio = 0.0f;
             posTestRatio = 0.0f;
@@ -491,7 +491,7 @@ void  NavEKF2_core::updateFilterStatus(void)
     // init return value
     filterStatus.value = 0;
     bool doingFlowNav = (PV_AidingMode == AID_RELATIVE) && flowDataValid;
-    bool doingWindRelNav = !tasTimeout && assume_zero_sideslip();
+    //bool doingWindRelNav = !tasTimeout && assume_zero_sideslip();
     bool doingNormalGpsNav = !posTimeout && (PV_AidingMode == AID_ABSOLUTE);
     bool someVertRefData = (!velTimeout && useGpsVertVel) || !hgtTimeout;
     bool someHorizRefData = !(velTimeout && posTimeout && tasTimeout) || doingFlowNav;
@@ -505,7 +505,7 @@ void  NavEKF2_core::updateFilterStatus(void)
     filterStatus.flags.attitude = !stateStruct.quat.is_nan() && filterHealthy;   // attitude valid (we need a better check)
     filterStatus.flags.horiz_vel = someHorizRefData && filterHealthy;      // horizontal velocity estimate valid
     filterStatus.flags.vert_vel = someVertRefData && filterHealthy;        // vertical velocity estimate valid
-    filterStatus.flags.horiz_pos_rel = ((doingFlowNav && gndOffsetValid) || doingWindRelNav || doingNormalGpsNav) && filterHealthy;   // relative horizontal position estimate valid
+    filterStatus.flags.horiz_pos_rel = ((doingFlowNav && gndOffsetValid) || doingNormalGpsNav) && filterHealthy;   // relative horizontal position estimate valid
     filterStatus.flags.horiz_pos_abs = doingNormalGpsNav && filterHealthy; // absolute horizontal position estimate valid
     filterStatus.flags.vert_pos = !hgtTimeout && filterHealthy && !hgtNotAccurate; // vertical position estimate valid
     filterStatus.flags.terrain_alt = gndOffsetValid && filterHealthy;		// terrain height estimate valid
